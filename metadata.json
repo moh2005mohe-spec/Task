@@ -1,0 +1,6 @@
+{
+  "name": "TaskZone",
+  "description": "A modern micro-task marketplace platform for advertisers to launch targeted campaigns and workers to complete simple tasks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
