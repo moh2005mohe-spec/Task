@@ -7,8 +7,10 @@ import { CreateTask } from './components/CreateTask';
 import { AdvertiserDashboard } from './components/AdvertiserDashboard';
 import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
-import { testDbConnection, isUsingFallback as initFallback, getUsers, saveUser } from './lib/supabase';
-import { HelpCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { testDbConnection, isUsingFallback as initFallback, saveUser } from './lib/supabase';
+
+const SESSION_KEY = 'taskzone_session_v1';
+const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -20,19 +22,44 @@ export default function App() {
   const [isUsingFallback, setIsUsingFallback] = useState(initFallback);
   const [showSqlModal, setShowSqlModal] = useState(false);
 
-  // Check database status on load
+  // Check session & database status on load
   useEffect(() => {
-    const checkDb = async () => {
+    const init = async () => {
+      // 1. Restore persistent session if valid (< 3 hours old)
+      try {
+        const savedSessionStr = localStorage.getItem(SESSION_KEY);
+        if (savedSessionStr) {
+          const session = JSON.parse(savedSessionStr);
+          if (session && session.user && session.expiresAt && Date.now() < session.expiresAt) {
+            setUser(session.user);
+            setActiveRole(session.user.role === 'admin' ? 'admin' : 'advertiser');
+          } else {
+            // Expired session (> 3 hours)
+            localStorage.removeItem(SESSION_KEY);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to restore session from storage", e);
+      }
+
+      // 2. Check DB connection
       const res = await testDbConnection();
       setIsDbConnected(res.connected);
       setIsUsingFallback(!res.hasTables || !res.connected);
     };
-    checkDb();
+    init();
   }, []);
 
   const handleAuthSuccess = (authenticatedUser: User) => {
     setUser(authenticatedUser);
     
+    // Save session in localStorage with 3-hour expiration timestamp
+    const expiresAt = Date.now() + THREE_HOURS_MS;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      user: authenticatedUser,
+      expiresAt: expiresAt
+    }));
+
     // Automatically select the appropriate role dashboard
     if (authenticatedUser.role === 'admin') {
       setActiveRole('admin');
@@ -45,12 +72,31 @@ export default function App() {
     setUser(null);
     setIsCreatingTask(false);
     setActiveRole('advertiser');
+    localStorage.removeItem(SESSION_KEY);
   };
 
   const handleBalanceUpdate = (updatedUser: User) => {
     setUser(updatedUser);
-    // Persist to database/local state
     saveUser(updatedUser);
+
+    // Update active session in storage
+    try {
+      const savedSessionStr = localStorage.getItem(SESSION_KEY);
+      if (savedSessionStr) {
+        const session = JSON.parse(savedSessionStr);
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+          ...session,
+          user: updatedUser
+        }));
+      } else {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+          user: updatedUser,
+          expiresAt: Date.now() + THREE_HOURS_MS
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to sync session user", e);
+    }
   };
 
   return (

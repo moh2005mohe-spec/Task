@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
-import { getTasks, getSubmissions, updateUserBalance, updateSubmissionStatus } from '../lib/supabase';
-import { PlusCircle, ListTodo, Wallet, BadgeAlert, AlertCircle, CheckCircle2, XCircle, Clock, Eye, Check, X, FileText, ImageIcon, UserCheck } from 'lucide-react';
+import { getTasks, getSubmissions, updateSubmissionStatus } from '../lib/supabase';
+import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2 } from 'lucide-react';
 
 interface AdvertiserDashboardProps {
   user: User;
@@ -17,8 +17,13 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
   const [campaigns, setCampaigns] = useState<Task[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fundingAmount, setFundingAmount] = useState('50');
-  const [successMsg, setSuccessMsg] = useState('');
+
+  // Deposit modal states
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('50');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [depositError, setDepositError] = useState('');
+  const [depositSuccess, setDepositSuccess] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -43,21 +48,53 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
     loadData();
   }, [user.id]);
 
-  const handleAddMockFunds = async () => {
-    const amount = parseFloat(fundingAmount);
-    if (isNaN(amount) || amount <= 0) return;
+  const handleInitiateDeposit = async () => {
+    const amount = parseFloat(depositAmount);
+    if (isNaN(amount) || amount < 1) {
+      setDepositError('Please enter a valid deposit amount (min $1.00 USD).');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    setDepositError('');
+    setDepositSuccess('');
 
     try {
-      const newBalance = user.balance + amount;
-      await updateUserBalance(user.id, newBalance);
-      onBalanceUpdate({
-        ...user,
-        balance: newBalance
+      const orderId = `DEP-${user.id.slice(0, 8)}-${Date.now()}`;
+      const response = await fetch('/api/payment/cryptomus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: amount,
+          currency: 'USD',
+          orderId: orderId
+        })
       });
-      setSuccessMsg(`Successfully added $${amount.toFixed(2)} to your account!`);
-      setTimeout(() => setSuccessMsg(''), 3000);
-    } catch (err) {
-      console.error('Failed to add mock funds', err);
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to initialize payment gateway.');
+      }
+
+      // Extract payment URL returned by Cryptomus
+      const paymentUrl = data.result?.url || data.url || data.data?.url;
+
+      if (paymentUrl) {
+        setDepositSuccess('Payment invoice created! Redirecting to Cryptomus payment page...');
+        setTimeout(() => {
+          window.open(paymentUrl, '_blank');
+        }, 1000);
+      } else {
+        setDepositSuccess(`Invoice created successfully for $${amount.toFixed(2)} USD!`);
+      }
+    } catch (err: any) {
+      console.error('Cryptomus deposit error:', err);
+      setDepositError(err.message || 'Error connecting to Cryptomus payment gateway.');
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -145,8 +182,8 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
       {/* Grid: Balance booster and Quick Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Wallet / Mock Balance Booster Card */}
-        <div className="bg-white p-6 rounded-2xl border border-neutral-100 shadow-2xs space-y-4">
+        {/* Wallet & Cryptomus Deposit Card */}
+        <div className="bg-white p-6 rounded-2xl border border-neutral-100 shadow-2xs flex flex-col justify-between space-y-4">
           <div className="flex items-center space-x-3 text-neutral-900">
             <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600">
               <Wallet className="h-5 w-5" />
@@ -159,32 +196,22 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
 
           <hr className="border-neutral-100" />
 
-          <div className="space-y-3">
-            <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
-              Test Balance Booster
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={fundingAmount}
-                onChange={(e) => setFundingAmount(e.target.value)}
-                className="block w-2/3 px-3 py-2 border border-neutral-200 rounded-xl text-xs bg-neutral-50/50 focus:outline-hidden"
-              >
-                <option value="10">Add $10.00 USD</option>
-                <option value="25">Add $25.00 USD</option>
-                <option value="50">Add $50.00 USD</option>
-                <option value="100">Add $100.00 USD</option>
-                <option value="250">Add $250.00 USD</option>
-              </select>
-              <button
-                onClick={handleAddMockFunds}
-                className="w-1/3 py-2 px-3 bg-neutral-950 text-white font-bold rounded-xl text-xs hover:bg-neutral-800 transition-all cursor-pointer"
-              >
-                Boost
-              </button>
-            </div>
-            {successMsg && (
-              <p className="text-[10px] text-emerald-600 font-semibold text-center bg-emerald-50 py-1 px-2 rounded-lg">{successMsg}</p>
-            )}
+          <div className="space-y-2">
+            <button
+              onClick={() => {
+                setIsDepositModalOpen(true);
+                setDepositError('');
+                setDepositSuccess('');
+              }}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-indigo-100 cursor-pointer"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span>إيداع رصيد / Deposit Funds</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+            <p className="text-[10px] text-neutral-400 text-center font-medium">
+              دفع آمن بواسطة Cryptomus (Crypto & Cards)
+            </p>
           </div>
         </div>
 
@@ -416,6 +443,128 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Cryptomus Deposit Modal */}
+      {isDepositModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white max-w-md w-full rounded-2xl border border-neutral-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-neutral-900">إيداع رصيد / Deposit Funds</h3>
+                  <p className="text-[11px] text-neutral-400 font-medium">بوابة Cryptomus المشفرة والبطاقات</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDepositModalOpen(false)}
+                className="text-neutral-400 hover:text-neutral-600 p-1.5 rounded-lg hover:bg-neutral-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
+              {/* Preset Amounts */}
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-2">
+                  اختر المبلغ / Select Amount (USD)
+                </label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {['10', '25', '50', '100'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setDepositAmount(preset)}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        depositAmount === preset
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-300'
+                      }`}
+                    >
+                      ${preset}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-400 font-bold text-sm">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    placeholder="مبلغ مخصص / Custom Amount"
+                    className="w-full pl-8 pr-4 py-2.5 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Supported Payment Options Badge */}
+              <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-100 space-y-2">
+                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                  طرق الدفع المتاحة عبر Gateway:
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[10px] font-semibold bg-white border border-neutral-200 px-2 py-0.5 rounded-lg text-neutral-700">
+                    Bitcoin (BTC)
+                  </span>
+                  <span className="text-[10px] font-semibold bg-white border border-neutral-200 px-2 py-0.5 rounded-lg text-neutral-700">
+                    USDT (TRC20/ERC20)
+                  </span>
+                  <span className="text-[10px] font-semibold bg-white border border-neutral-200 px-2 py-0.5 rounded-lg text-neutral-700">
+                    Ethereum (ETH)
+                  </span>
+                  <span className="text-[10px] font-semibold bg-white border border-neutral-200 px-2 py-0.5 rounded-lg text-neutral-700">
+                    Visa / MasterCard
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Messages */}
+              {depositError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl p-3">
+                  {depositError}
+                </div>
+              )}
+              {depositSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl p-3 font-semibold">
+                  {depositSuccess}
+                </div>
+              )}
+
+              {/* Action Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleInitiateDeposit}
+                  disabled={isProcessingPayment}
+                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center justify-center space-x-2 transition-all shadow-md shadow-indigo-100 disabled:opacity-60 cursor-pointer"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>جاري معالجة الطلب...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4" />
+                      <span>متابعة للدفع (${parseFloat(depositAmount || '0').toFixed(2)})</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
