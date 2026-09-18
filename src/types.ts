@@ -38,7 +38,7 @@ export interface ZoneConfig {
   id: string;
   name: string;
   minPrice: number;
-  countries: string[];
+  continent: string;
 }
 
 export interface CategoryConfig {
@@ -48,42 +48,12 @@ export interface CategoryConfig {
 }
 
 export const ZONES: ZoneConfig[] = [
-  {
-    id: 'international',
-    name: 'International Zone (Global - Cheap)',
-    minPrice: 0.05,
-    countries: ['All Countries']
-  },
-  {
-    id: 'africa',
-    name: 'Africa Zone (Africa Continent)',
-    minPrice: 0.08,
-    countries: ['Egypt', 'Nigeria', 'South Africa', 'Kenya', 'Morocco', 'Ghana', 'Algeria', 'Ethiopia', 'Tunisia']
-  },
-  {
-    id: 'asia',
-    name: 'Asia Zone (Asia Continent)',
-    minPrice: 0.08,
-    countries: ['India', 'Pakistan', 'Bangladesh', 'Indonesia', 'Philippines', 'Vietnam', 'Japan', 'China', 'Saudi Arabia', 'UAE', 'Turkey']
-  },
-  {
-    id: 'latin_america',
-    name: 'Latin America Zone (Latin America)',
-    minPrice: 0.10,
-    countries: ['Brazil', 'Mexico', 'Argentina', 'Colombia', 'Peru', 'Chile', 'Venezuela', 'Ecuador', 'Guatemala']
-  },
-  {
-    id: 'europe',
-    name: 'Europe Zone (Eastern & Western Europe)',
-    minPrice: 0.15,
-    countries: ['Germany', 'France', 'Poland', 'Romania', 'Ukraine', 'Spain', 'Italy', 'Netherlands', 'Sweden', 'United Kingdom']
-  },
-  {
-    id: 'usa_western',
-    name: 'USA / Western Zone (US, CA, UK, AU, NZ)',
-    minPrice: 0.25,
-    countries: ['United States', 'Canada', 'United Kingdom', 'Australia', 'New Zealand']
-  }
+  { id: 'international', name: 'International Zone (Global)', minPrice: 0.05, continent: 'All' },
+  { id: 'africa', name: 'Africa Zone', minPrice: 0.08, continent: 'Africa' },
+  { id: 'asia', name: 'Asia Zone', minPrice: 0.08, continent: 'Asia' },
+  { id: 'latin_america', name: 'Latin America Zone', minPrice: 0.10, continent: 'South America' },
+  { id: 'europe', name: 'Europe Zone', minPrice: 0.15, continent: 'Europe' },
+  { id: 'usa_western', name: 'USA / Western Zone', minPrice: 0.25, continent: 'North America' }
 ];
 
 export const CATEGORIES: CategoryConfig[] = [

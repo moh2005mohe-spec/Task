@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Task, User, ZONES, CATEGORIES, ZoneConfig, CategoryConfig } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Task, User, ZONES, CATEGORIES } from '../types';
+import { CONTINENTS } from '../data/countries';
 import { saveTask, updateUserBalance } from '../lib/supabase';
-import { ChevronLeft, Info, HelpCircle, Calculator, CheckCircle2, DollarSign, Globe, ShieldCheck, ClipboardList, Eye } from 'lucide-react';
+import { ChevronLeft, Info, Calculator, ShieldCheck, Globe, ClipboardList } from 'lucide-react';
 
 interface CreateTaskProps {
   user: User;
@@ -14,8 +15,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
   
   // Zone selection
   const [selectedZoneId, setSelectedZoneId] = useState(ZONES[0].id);
-  const [targetAllInZone, setTargetAllInZone] = useState(true);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>(['All Countries']);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
   // Category selection
   const [selectedCategoryId, setSelectedCategoryId] = useState(CATEGORIES[0].id);
@@ -64,39 +64,40 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
     setTotalCost(parseFloat((calcSubtotal + calcFee).toFixed(2)));
   }, [workerPay, workersNeeded]);
 
-  // Adjust selected countries when zone or targeting mode changes
   const handleZoneChange = (zoneId: string) => {
     setSelectedZoneId(zoneId);
-    const targetZone = ZONES.find(z => z.id === zoneId) || ZONES[0];
-    setTargetAllInZone(true);
-    setSelectedCountries([targetZone.countries[0] === 'All Countries' ? 'All Countries' : `All of ${targetZone.name.split(' ')[0]}`]);
+    setSelectedCountries([]); // Reset countries on zone change
   };
+
+  const isAllSelected = useMemo(() => {
+    const continent = ZONES.find(z => z.id === selectedZoneId)?.continent;
+    if (continent === 'All') return selectedCountries.length === Object.values(CONTINENTS).flat().length;
+    if (continent) return selectedCountries.length === (CONTINENTS[continent]?.length || 0);
+    return false;
+  }, [selectedCountries, selectedZoneId]);
 
   const handleToggleCountry = (country: string) => {
-    if (targetAllInZone) {
-      setTargetAllInZone(false);
-      setSelectedCountries([country]);
-    } else {
-      let updated = [...selectedCountries];
-      if (updated.includes(country)) {
-        updated = updated.filter(c => c !== country);
-        if (updated.length === 0) {
-          // If none selected, default to target all
-          setTargetAllInZone(true);
-          setSelectedCountries([currentZone.countries[0] === 'All Countries' ? 'All Countries' : `All of ${currentZone.name.split(' ')[0]}`]);
-        } else {
-          setSelectedCountries(updated);
-        }
-      } else {
-        updated.push(country);
-        setSelectedCountries(updated);
-      }
-    }
+    setSelectedCountries(prev => 
+      prev.includes(country) ? prev.filter(c => c !== country) : [...prev, country]
+    );
   };
 
-  const handleSelectAllInZone = () => {
-    setTargetAllInZone(true);
-    setSelectedCountries([currentZone.countries[0] === 'All Countries' ? 'All Countries' : `All of ${currentZone.name.split(' ')[0]}`]);
+  const handleToggleAll = () => {
+    const continent = ZONES.find(z => z.id === selectedZoneId)?.continent;
+    if (!continent) return;
+    
+    let allCountries: string[] = [];
+    if (continent === 'All') {
+      allCountries = Object.values(CONTINENTS).flat();
+    } else {
+      allCountries = CONTINENTS[continent] || [];
+    }
+
+    if (isAllSelected) {
+      setSelectedCountries([]);
+    } else {
+      setSelectedCountries(allCountries);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -250,32 +251,32 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                       <span className="text-xs font-bold text-neutral-700">Target Specific Countries:</span>
                       <button
                         type="button"
-                        onClick={handleSelectAllInZone}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
-                          targetAllInZone
+                        onClick={handleToggleAll}
+                        className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                          isAllSelected
                             ? 'bg-indigo-600 text-white border-transparent'
                             : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
                         }`}
                       >
-                        Target Entire {currentZone.name.split(' ')[0]}
+                        {isAllSelected ? 'Deselect All' : 'Select All'}
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {currentZone.countries.map((country) => {
-                        const isSelected = selectedCountries.includes(country) && !targetAllInZone;
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto">
+                      {(CONTINENTS[currentZone.continent] || []).map((country) => {
+                        const isSelected = selectedCountries.includes(country);
                         return (
                           <button
                             key={country}
                             type="button"
                             onClick={() => handleToggleCountry(country)}
-                            className={`p-2 rounded-lg border text-left text-xs font-semibold transition-all cursor-pointer truncate ${
+                            className={`p-2 rounded-lg border text-left text-[10px] font-medium transition-all cursor-pointer truncate ${
                               isSelected
                                 ? 'bg-indigo-50 border-indigo-500 text-indigo-900'
                                 : 'bg-white border-neutral-200 hover:border-neutral-300 text-neutral-600'
                             }`}
                           >
-                            <span className="mr-1">{isSelected ? '✓' : '+'}</span>
+                            <span className="mr-1.5">{isSelected ? '✓' : '○'}</span>
                             {country}
                           </button>
                         );
