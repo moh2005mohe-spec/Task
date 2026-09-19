@@ -597,7 +597,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   {sub.status === 'rejected' && (
                     <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
                       <button
-                        onClick={() => { /* Implement dispute handling for advertiser */ }}
+                        onClick={() => alert('Dispute system feature is coming soon.')}
                         className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
                         title="Report this worker for malicious activity"
                       >
@@ -611,7 +611,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   {sub.status === 'approved' && (
                     <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
                       <button
-                        onClick={() => { /* Implement rating handling for advertiser */ }}
+                        onClick={() => alert('Rating worker feature is coming soon.')}
                         className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
                         title="Rate this worker"
                       >

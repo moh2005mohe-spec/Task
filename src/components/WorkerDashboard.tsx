@@ -533,7 +533,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                                 Paid +${taskPay.toFixed(2)} USD
                               </span>
                               <button
-                                onClick={() => { /* Implement rating handling for worker */ }}
+                                onClick={() => alert('Rating advertiser feature is coming soon.')}
                                 className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
                                 title="Rate this advertiser"
                               >
