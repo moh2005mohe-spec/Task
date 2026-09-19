@@ -14,6 +14,7 @@ interface WorkerDashboardProps {
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanceUpdate, onSelectTask }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [workerSubmissions, setWorkerSubmissions] = useState<Submission[]>([]);
+  const [allSubmissionsList, setAllSubmissionsList] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
 
   // KYC Enforcer Modals
@@ -35,12 +36,23 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     setLoading(true);
     try {
       const allTasks = await getTasks();
-      // Display all active tasks from database (approved or pending review, exclude only rejected)
-      const liveTasks = allTasks.filter(t => t.status !== 'rejected');
+      const allSubmissions = await getSubmissions();
+      setAllSubmissionsList(allSubmissions);
+
+      // Display active tasks, hiding those that have reached their target workers_needed budget unless user already submitted
+      const liveTasks = allTasks.filter(t => {
+        if (t.status === 'rejected') return false;
+        const tSubs = allSubmissions.filter(s => s.task_id === t.id);
+        const doneCount = tSubs.length;
+        const maxNeeded = t.workers_needed || 50;
+        if (doneCount >= maxNeeded) {
+          const hasMySub = tSubs.some(s => s.worker_email.toLowerCase() === user.email.toLowerCase());
+          if (!hasMySub) return false;
+        }
+        return true;
+      });
       setTasks(liveTasks);
 
-      const allSubmissions = await getSubmissions();
-      // Filter for this worker's submissions
       const mySubmissions = allSubmissions.filter(s => s.worker_email.toLowerCase() === user.email.toLowerCase());
       setWorkerSubmissions(mySubmissions);
     } catch (err) {
@@ -353,11 +365,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             </div>
           ) : (
             <div className="space-y-4 w-full">
-              {filteredTasks.map((task, idx) => {
+              {filteredTasks.map((task) => {
                 const isCompleted = hasSubmitted(task.id);
                 const subStatus = getMySubmissionStatus(task.id);
-                const doneCount = (idx * 7 + 12) % 120 + 5;
-                const totalCount = doneCount + 45;
+                const taskSubs = allSubmissionsList.filter(s => s.task_id === task.id);
+                const doneCount = taskSubs.length;
+                const totalCount = task.workers_needed || 50;
 
                 return (
                   <div
@@ -369,25 +382,23 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                     {/* Task Metadata & Information matching SproutGigs screenshot */}
                     <div className="space-y-3 flex-1">
                       <div>
-                        {/* SproutGigs Header Badges */}
+                        {/* Actual Category & Target Zone / Countries Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span className="text-xs font-extrabold text-neutral-900 bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-200/50">
-                            Offer: {task.title}
+                          <span className="text-xs font-extrabold bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-200/50">
+                            {task.category}
                           </span>
-                          <span className="bg-purple-100 text-purple-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
-                            PREMIUM
-                          </span>
-                          <span className="bg-neutral-100 text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                            N International
-                          </span>
-                          <span className="bg-neutral-100 text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                            Novice
+                          <span className="bg-neutral-100 text-neutral-700 text-[11px] font-bold px-2.5 py-0.5 rounded-md flex items-center">
+                            <MapPin className="h-3 w-3 mr-1 text-neutral-400" />
+                            {task.zone || 'International Zone'}
                           </span>
                         </div>
 
                         <h3 className="text-sm sm:text-base font-extrabold text-neutral-900 leading-snug">
-                          {task.instructions.slice(0, 95)}...
+                          {task.title}
                         </h3>
+                        <p className="text-xs text-neutral-600 mt-1 line-clamp-2">
+                          {task.instructions}
+                        </p>
 
                         {/* Completion progress bar matching screenshot */}
                         <div className="mt-3 flex items-center space-x-3 text-xs text-neutral-500">
