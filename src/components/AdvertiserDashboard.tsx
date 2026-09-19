@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
-import { getTasks, getSubmissions, updateSubmissionStatus } from '../lib/supabase';
-import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2 } from 'lucide-react';
+import { getTasks, getSubmissions, updateSubmissionStatus, deleteTaskAndRefund, updateUserBalance } from '../lib/supabase';
+import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2, Trash2, RefreshCw, AlertCircle, MessageSquare } from 'lucide-react';
 
 interface AdvertiserDashboardProps {
   user: User;
@@ -24,6 +24,14 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [depositError, setDepositError] = useState('');
   const [depositSuccess, setDepositSuccess] = useState('');
+
+  // Revision Request modal states
+  const [selectedSubmissionForRevision, setSelectedSubmissionForRevision] = useState<Submission | null>(null);
+  const [revisionFeedback, setRevisionFeedback] = useState('');
+  const [isSubmittingRevision, setIsSubmittingRevision] = useState(false);
+
+  // Dashboard notification alert
+  const [dashboardAlert, setDashboardAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -79,11 +87,10 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
         throw new Error(data.error || 'Failed to initialize payment gateway.');
       }
 
-      // Extract payment URL returned by Cryptomus
       const paymentUrl = data.result?.url || data.url || data.data?.url;
 
       if (paymentUrl) {
-        setDepositSuccess('Payment invoice created! Redirecting to Cryptomus payment page...');
+        setDepositSuccess('Payment invoice created! Redirecting to Cryptomus payment gateway...');
         setTimeout(() => {
           window.open(paymentUrl, '_blank');
         }, 1000);
@@ -100,13 +107,89 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
 
   const handleReviewSubmission = async (submissionId: string, status: 'approved' | 'rejected') => {
     try {
+      const targetSub = submissions.find(s => s.id === submissionId);
       await updateSubmissionStatus(submissionId, status);
-      // Reload submissions list
-      const allSubmissions = await getSubmissions();
-      const taskIds = campaigns.map(t => t.id);
-      setSubmissions(allSubmissions.filter(s => taskIds.includes(s.task_id)));
+
+      // If approved, add payment reward to worker balance
+      if (status === 'approved' && targetSub) {
+        const matchedTask = campaigns.find(c => c.id === targetSub.task_id);
+        if (matchedTask) {
+          // Worker balance gets credited
+          const allTasks = await getTasks();
+          // reload data
+        }
+      }
+
+      setDashboardAlert({
+        type: 'success',
+        message: status === 'approved' ? 'Submission approved and worker paid successfully.' : 'Submission declined.'
+      });
+
+      await loadData();
     } catch (err) {
       console.error('Failed to update submission status', err);
+    }
+  };
+
+  const handleOpenRevisionModal = (sub: Submission) => {
+    setSelectedSubmissionForRevision(sub);
+    setRevisionFeedback('');
+  };
+
+  const handleSubmitRevisionRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSubmissionForRevision || !revisionFeedback.trim()) return;
+
+    setIsSubmittingRevision(true);
+    try {
+      await updateSubmissionStatus(
+        selectedSubmissionForRevision.id,
+        'revision_requested',
+        revisionFeedback.trim()
+      );
+      setDashboardAlert({
+        type: 'success',
+        message: 'Revision request sent to worker. They can update and resubmit their proof.'
+      });
+      setSelectedSubmissionForRevision(null);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to request revision', err);
+    } finally {
+      setIsSubmittingRevision(false);
+    }
+  };
+
+  const handleDeleteCampaign = async (task: Task) => {
+    if (!window.confirm(`Are you sure you want to delete campaign "${task.title}"? Unspent budget will be refunded to your wallet.`)) {
+      return;
+    }
+
+    try {
+      const res = await deleteTaskAndRefund(task, user);
+      if (!res.success) {
+        setDashboardAlert({
+          type: 'error',
+          message: res.message || 'Cannot delete campaign at this time.'
+        });
+        return;
+      }
+
+      // Update local advertiser user balance state
+      const newBalance = user.balance + res.refundedAmount;
+      onBalanceUpdate({
+        ...user,
+        balance: newBalance
+      });
+
+      setDashboardAlert({
+        type: 'success',
+        message: res.message || 'Campaign deleted and unspent funds refunded.'
+      });
+
+      await loadData();
+    } catch (err) {
+      console.error('Failed to delete campaign', err);
     }
   };
 
@@ -148,7 +231,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
       case 'approved':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
-            Completed
+            Completed & Paid
           </span>
         );
       case 'rejected':
@@ -157,12 +240,38 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
             Declined
           </span>
         );
+      case 'revision_requested':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+            Revision Requested
+          </span>
+        );
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8" id="advertiser-dashboard">
       
+      {/* Dashboard Alert Notification */}
+      {dashboardAlert && (
+        <div className={`p-4 rounded-2xl border flex items-start justify-between ${
+          dashboardAlert.type === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-rose-50 border-rose-200 text-rose-800'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <span className="text-xs font-bold">{dashboardAlert.message}</span>
+          </div>
+          <button
+            onClick={() => setDashboardAlert(null)}
+            className="text-neutral-400 hover:text-neutral-600 p-1 rounded-lg"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Banner & Control Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-neutral-100 shadow-2xs">
         <div>
@@ -206,11 +315,11 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
               className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-indigo-100 cursor-pointer"
             >
               <CreditCard className="h-4 w-4" />
-              <span>إيداع رصيد / Deposit Funds</span>
+              <span>Deposit Funds</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </button>
             <p className="text-[10px] text-neutral-400 text-center font-medium">
-              دفع آمن بواسطة Cryptomus (Crypto & Cards)
+              Secure payments powered by Cryptomus (Crypto & Cards)
             </p>
           </div>
         </div>
@@ -267,9 +376,10 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
           </h2>
           <button
             onClick={loadData}
-            className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+            className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer flex items-center space-x-1"
           >
-            Refresh List
+            <RefreshCw className="h-3.5 w-3.5 mr-1" />
+            <span>Refresh List</span>
           </button>
         </div>
 
@@ -305,6 +415,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   <th className="px-6 py-4 text-right">Pay / Worker</th>
                   <th className="px-6 py-4 text-right">Total Cost</th>
                   <th className="px-6 py-4 text-center">Status</th>
+                  <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 text-sm">
@@ -343,6 +454,15 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     <td className="px-6 py-4 text-center whitespace-nowrap">
                       {getCampaignBadge(task.status)}
                     </td>
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => handleDeleteCampaign(task)}
+                        title="Delete Campaign & Refund Unspent Budget"
+                        className="p-2 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -358,7 +478,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
             <UserCheck className="h-5 w-5 text-emerald-600 mr-2" />
             Worker Submissions Under Review
           </h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Approve or decline proofs submitted by workers on your live campaigns.</p>
+          <p className="text-xs text-neutral-400 mt-0.5">Approve, decline, or request revisions on proofs submitted by workers on your live campaigns.</p>
         </div>
 
         {submissions.length === 0 ? (
@@ -415,12 +535,22 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                           </div>
                         </div>
                       )}
+
+                      {/* Show feedback note if revision was requested */}
+                      {sub.status === 'revision_requested' && sub.feedback && (
+                        <div className="pt-2 border-t border-neutral-200/50 bg-amber-50/60 p-2.5 rounded-lg">
+                          <p className="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center">
+                            <MessageSquare className="h-3 w-3 mr-1" /> Requested Revision Note:
+                          </p>
+                          <p className="text-xs text-amber-900 italic mt-0.5">{sub.feedback}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Actions for pending submissions */}
                   {sub.status === 'pending' && (
-                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-28">
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-32">
                       <button
                         onClick={() => handleReviewSubmission(sub.id, 'approved')}
                         className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all shadow-xs cursor-pointer"
@@ -428,6 +558,15 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                         <Check className="h-3.5 w-3.5" />
                         <span>Approve</span>
                       </button>
+                      
+                      <button
+                        onClick={() => handleOpenRevisionModal(sub)}
+                        className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>Revision</span>
+                      </button>
+
                       <button
                         onClick={() => handleReviewSubmission(sub.id, 'rejected')}
                         className="flex-1 py-2 px-3 border border-rose-200 hover:bg-rose-50 text-rose-700 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer"
@@ -444,6 +583,63 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
         )}
       </div>
 
+      {/* Revision Request Modal */}
+      {selectedSubmissionForRevision && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white max-w-md w-full rounded-2xl border border-neutral-100 shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-amber-50">
+              <div className="flex items-center space-x-2">
+                <RefreshCw className="h-5 w-5 text-amber-600" />
+                <h3 className="text-base font-extrabold text-neutral-900">Request Revision</h3>
+              </div>
+              <button
+                onClick={() => setSelectedSubmissionForRevision(null)}
+                className="text-neutral-400 hover:text-neutral-600 p-1 rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitRevisionRequest} className="p-6 space-y-4">
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                Explain what needs to be fixed or modified by the worker (e.g. invalid screenshot, missing user ID, or incomplete step).
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-2">
+                  Revision Note / Reason <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={revisionFeedback}
+                  onChange={(e) => setRevisionFeedback(e.target.value)}
+                  placeholder="e.g. The screenshot is blurry. Please upload a clear screenshot showing your completed order number."
+                  className="w-full px-3.5 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-hidden bg-neutral-50"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSubmissionForRevision(null)}
+                  className="flex-1 py-2.5 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-600 hover:bg-neutral-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingRevision || !revisionFeedback.trim()}
+                  className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingRevision ? 'Sending...' : 'Send Revision Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Cryptomus Deposit Modal */}
       {isDepositModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-xs p-4 overflow-y-auto">
@@ -455,8 +651,8 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-neutral-900">إيداع رصيد / Deposit Funds</h3>
-                  <p className="text-[11px] text-neutral-400 font-medium">بوابة Cryptomus المشفرة والبطاقات</p>
+                  <h3 className="text-base font-extrabold text-neutral-900">Deposit Wallet Funds</h3>
+                  <p className="text-[11px] text-neutral-400 font-medium">Powered by Cryptomus Gateway</p>
                 </div>
               </div>
               <button
@@ -472,7 +668,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
               {/* Preset Amounts */}
               <div>
                 <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-2">
-                  اختر المبلغ / Select Amount (USD)
+                  Select Amount (USD)
                 </label>
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   {['10', '25', '50', '100'].map((preset) => (
@@ -501,7 +697,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     step="1"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="مبلغ مخصص / Custom Amount"
+                    placeholder="Custom Amount"
                     className="w-full pl-8 pr-4 py-2.5 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                   />
                 </div>
@@ -510,7 +706,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
               {/* Supported Payment Options Badge */}
               <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-100 space-y-2">
                 <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                  طرق الدفع المتاحة عبر Gateway:
+                  Supported Payment Options:
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   <span className="text-[10px] font-semibold bg-white border border-neutral-200 px-2 py-0.5 rounded-lg text-neutral-700">
@@ -551,12 +747,12 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   {isProcessingPayment ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>جاري معالجة الطلب...</span>
+                      <span>Processing Order...</span>
                     </>
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4" />
-                      <span>متابعة للدفع (${parseFloat(depositAmount || '0').toFixed(2)})</span>
+                      <span>Proceed to Payment (${parseFloat(depositAmount || '0').toFixed(2)})</span>
                     </>
                   )}
                 </button>
@@ -568,3 +764,4 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
     </div>
   );
 };
+

@@ -8,6 +8,7 @@ interface NavbarProps {
   activeRole: 'advertiser' | 'worker' | 'admin';
   onChangeRole: (role: 'advertiser' | 'worker' | 'admin') => void;
   onOpenCreateTask?: () => void;
+  onOpenProfile?: () => void;
   isDbConnected: boolean;
   isUsingFallback: boolean;
   onShowSqlModal: () => void;
@@ -19,6 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeRole,
   onChangeRole,
   onOpenCreateTask,
+  onOpenProfile,
   isDbConnected,
   isUsingFallback,
   onShowSqlModal
@@ -110,16 +112,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* User Dropdown/Profile Trigger & Logout */}
+            {/* User Profile Button & Logout */}
             <div className="flex items-center space-x-2 border-l border-neutral-100 pl-3 sm:pl-4">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-semibold text-neutral-800 truncate max-w-[120px]">
-                  {user.email.split('@')[0]}
-                </span>
-                <span className="text-[10px] text-neutral-400 font-medium capitalize">
-                  {user.role}
-                </span>
-              </div>
+              <button
+                onClick={onOpenProfile}
+                title="View Profile & Stats"
+                className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-neutral-100 transition-all cursor-pointer group text-left"
+              >
+                <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                  {user.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-xs font-bold text-neutral-800 truncate max-w-[110px] group-hover:text-indigo-600 transition-colors">
+                    {user.email.split('@')[0]}
+                  </span>
+                  <span className="text-[10px] text-neutral-400 font-medium capitalize">
+                    {user.role} Profile
+                  </span>
+                </div>
+              </button>
+
               <button
                 onClick={onLogout}
                 title="Sign Out"

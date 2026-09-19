@@ -30,7 +30,8 @@ export interface Submission {
   worker_email: string;
   proof_text: string;
   proof_image?: string; // base64 or URL
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'revision_requested';
+  feedback?: string; // Feedback from advertiser (e.g. revision request reason)
   submitted_at: string;
 }
 

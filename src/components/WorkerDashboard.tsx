@@ -61,8 +61,15 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
 
   const handleOpenSubmission = (task: Task) => {
     setSelectedTask(task);
-    setProofText('');
-    setProofImageBase64('');
+    // Find existing submission if any (e.g., revision requested)
+    const existingSub = workerSubmissions.find(s => s.task_id === task.id);
+    if (existingSub) {
+      setProofText(existingSub.proof_text || '');
+      setProofImageBase64(existingSub.proof_image || '');
+    } else {
+      setProofText('');
+      setProofImageBase64('');
+    }
     setModalError('');
   };
 
@@ -201,7 +208,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                       </div>
 
                       {/* Action buttons */}
-                      {isCompleted ? (
+                      {isCompleted && subStatus !== 'revision_requested' ? (
                         <div className="text-right">
                           {subStatus === 'pending' && (
                             <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
@@ -222,10 +229,18 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                       ) : (
                         <button
                           onClick={() => handleOpenSubmission(task)}
-                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer shadow-sm"
+                          className={`px-4 py-2.5 font-bold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer shadow-sm ${
+                            subStatus === 'revision_requested'
+                              ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
+                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          }`}
                         >
                           <Send className="h-3.5 w-3.5" />
-                          <span>Complete Task & Submit Proof</span>
+                          <span>
+                            {subStatus === 'revision_requested'
+                              ? 'Fix & Resubmit Proof'
+                              : 'Complete Task & Submit Proof'}
+                          </span>
                         </button>
                       )}
                     </div>
@@ -301,12 +316,27 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
 
             {/* Modal Form */}
             <form onSubmit={handleSubmitProof} className="p-6 space-y-5 flex-1">
-              {modalError && (
-                <div className="bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-xl p-3 flex items-start space-x-2">
-                  <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
-                  <span>{modalError}</span>
-                </div>
-              )}
+              {/* Revision Request Notice if applicable */}
+              {(() => {
+                const sub = workerSubmissions.find(s => s.task_id === selectedTask.id);
+                if (sub && sub.status === 'revision_requested' && sub.feedback) {
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl p-3.5 space-y-1">
+                      <p className="font-bold flex items-center text-amber-800">
+                        <AlertCircle className="h-4 w-4 mr-1 text-amber-600 shrink-0" />
+                        Advertiser Requested Revision:
+                      </p>
+                      <p className="text-amber-700 italic font-medium leading-relaxed bg-white/60 p-2 rounded-lg border border-amber-100/50">
+                        "{sub.feedback}"
+                      </p>
+                      <p className="text-[10px] text-amber-600 font-semibold mt-1">
+                        Please make the required changes below and submit updated proof.
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* Task Reminder */}
               <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-100">

@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS submissions (
   proof_text TEXT NOT NULL,
   proof_image TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
+  feedback TEXT,
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -307,12 +308,18 @@ export async function getSubmissions(): Promise<Submission[]> {
 export async function saveSubmission(submission: Submission): Promise<Submission> {
   if (isUsingFallback) {
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-    submissions.push(submission);
+    // If worker resubmits for an existing task, replace existing submission
+    const existingIdx = submissions.findIndex(s => s.task_id === submission.task_id && s.worker_email.toLowerCase() === submission.worker_email.toLowerCase());
+    if (existingIdx >= 0) {
+      submissions[existingIdx] = submission;
+    } else {
+      submissions.push(submission);
+    }
     setLS(LS_KEYS.SUBMISSIONS, submissions);
     return submission;
   }
   try {
-    const { data, error } = await supabase.from('submissions').insert(submission).select().single();
+    const { data, error } = await supabase.from('submissions').upsert(submission).select().single();
     if (error) throw error;
     return data;
   } catch (err) {
@@ -322,22 +329,83 @@ export async function saveSubmission(submission: Submission): Promise<Submission
   }
 }
 
-export async function updateSubmissionStatus(submissionId: string, status: 'approved' | 'rejected'): Promise<void> {
+export async function updateSubmissionStatus(
+  submissionId: string,
+  status: 'approved' | 'rejected' | 'revision_requested',
+  feedback?: string
+): Promise<void> {
   if (isUsingFallback) {
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
     const idx = submissions.findIndex(s => s.id === submissionId);
     if (idx >= 0) {
       submissions[idx].status = status;
+      submissions[idx].feedback = feedback;
       setLS(LS_KEYS.SUBMISSIONS, submissions);
     }
     return;
   }
   try {
-    const { error } = await supabase.from('submissions').update({ status }).eq('id', submissionId);
+    const { error } = await supabase.from('submissions').update({ status, feedback }).eq('id', submissionId);
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase update submission status failed, using LocalStorage', err);
     isUsingFallback = true;
-    await updateSubmissionStatus(submissionId, status);
+    await updateSubmissionStatus(submissionId, status, feedback);
   }
+}
+
+export async function deleteTaskAndRefund(
+  task: Task,
+  advertiserUser: User
+): Promise<{ success: boolean; refundedAmount: number; message?: string }> {
+  const allSubmissions = await getSubmissions();
+  const taskSubmissions = allSubmissions.filter(s => s.task_id === task.id);
+
+  // Check if there are active unresolved submissions
+  const pendingOrRevision = taskSubmissions.filter(s => s.status === 'pending' || s.status === 'revision_requested');
+  if (pendingOrRevision.length > 0) {
+    return {
+      success: false,
+      refundedAmount: 0,
+      message: `Cannot delete task yet! There are ${pendingOrRevision.length} pending or revision submission(s). You must approve, reject, or resolve them first.`
+    };
+  }
+
+  // Calculate refund: original total cost minus pay given for approved submissions
+  const approvedCount = taskSubmissions.filter(s => s.status === 'approved').length;
+  const approvedPayout = approvedCount * task.worker_pay;
+  const refundedAmount = Math.max(0, task.total_cost - approvedPayout);
+
+  // 1. Delete task from DB/LocalStorage
+  if (isUsingFallback) {
+    const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
+    const updatedTasks = tasks.filter(t => t.id !== task.id);
+    setLS(LS_KEYS.TASKS, updatedTasks);
+
+    const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+    const updatedSubmissions = submissions.filter(s => s.task_id !== task.id);
+    setLS(LS_KEYS.SUBMISSIONS, updatedSubmissions);
+  } else {
+    try {
+      await supabase.from('tasks').delete().eq('id', task.id);
+    } catch (err) {
+      console.warn('Failed deleting task from Supabase, falling back', err);
+      isUsingFallback = true;
+      return deleteTaskAndRefund(task, advertiserUser);
+    }
+  }
+
+  // 2. Refund remaining amount to advertiser balance
+  if (refundedAmount > 0) {
+    const newBalance = parseFloat((advertiserUser.balance + refundedAmount).toFixed(2));
+    await updateUserBalance(advertiserUser.id, newBalance);
+  }
+
+  return {
+    success: true,
+    refundedAmount,
+    message: refundedAmount > 0
+      ? `Task deleted successfully. $${refundedAmount.toFixed(2)} USD refunded to your wallet balance.`
+      : `Task deleted successfully.`
+  };
 }

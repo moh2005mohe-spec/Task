@@ -7,6 +7,7 @@ import { CreateTask } from './components/CreateTask';
 import { AdvertiserDashboard } from './components/AdvertiserDashboard';
 import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
+import { UserProfileModal } from './components/UserProfileModal';
 import { testDbConnection, isUsingFallback as initFallback, saveUser } from './lib/supabase';
 
 const SESSION_KEY = 'taskzone_session_v1';
@@ -16,6 +17,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeRole, setActiveRole] = useState<'advertiser' | 'worker' | 'admin'>('advertiser');
   const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Supabase database status
   const [isDbConnected, setIsDbConnected] = useState(false);
@@ -115,6 +117,7 @@ export default function App() {
             onOpenCreateTask={() => {
               setIsCreatingTask(true);
             }}
+            onOpenProfile={() => setIsProfileOpen(true)}
             isDbConnected={isDbConnected}
             isUsingFallback={isUsingFallback}
             onShowSqlModal={() => setShowSqlModal(true)}
@@ -164,6 +167,15 @@ export default function App() {
         isOpen={showSqlModal}
         onClose={() => setShowSqlModal(false)}
       />
+
+      {/* User Profile Modal */}
+      {user && (
+        <UserProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          user={user}
+        />
+      )}
 
       {/* Footer copyright */}
       <footer className="bg-white border-t border-neutral-100 py-6 mt-12 text-center text-xs text-neutral-400 font-medium">
