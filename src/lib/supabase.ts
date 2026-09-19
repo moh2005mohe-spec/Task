@@ -381,11 +381,16 @@ export async function getSubmissions(): Promise<Submission[]> {
 }
 
 export async function saveSubmission(submission: Submission): Promise<Submission> {
+  submission.status = 'pending';
+  submission.submitted_at = new Date().toISOString();
+
   if (isUsingFallback) {
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-    // If worker resubmits for an existing task, replace existing submission
-    const existingIdx = submissions.findIndex(s => s.task_id === submission.task_id && s.worker_email.toLowerCase() === submission.worker_email.toLowerCase());
+    const existingIdx = submissions.findIndex(
+      s => s.task_id === submission.task_id && s.worker_email.toLowerCase() === submission.worker_email.toLowerCase()
+    );
     if (existingIdx >= 0) {
+      submission.id = submissions[existingIdx].id;
       submissions[existingIdx] = submission;
     } else {
       submissions.push(submission);
@@ -394,6 +399,18 @@ export async function saveSubmission(submission: Submission): Promise<Submission
     return submission;
   }
   try {
+    // Lookup existing submission ID to prevent duplicate rows in Supabase
+    const { data: existing } = await supabase
+      .from('submissions')
+      .select('id')
+      .eq('task_id', submission.task_id)
+      .ilike('worker_email', submission.worker_email)
+      .maybeSingle();
+
+    if (existing && existing.id) {
+      submission.id = existing.id;
+    }
+
     const { data, error } = await supabase.from('submissions').upsert(submission).select().single();
     if (error) throw error;
     return data;
@@ -545,6 +562,31 @@ export async function markNotificationsAsRead(userEmailOrId: string): Promise<vo
     console.warn('Supabase mark notifications read failed, using LocalStorage', err);
     isUsingFallback = true;
     await markNotificationsAsRead(userEmailOrId);
+  }
+}
+
+export async function markSingleNotificationAsRead(notifId: string): Promise<void> {
+  if (!notifId) return;
+
+  if (isUsingFallback) {
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    const item = list.find(n => n.id === notifId);
+    if (item) {
+      item.read = true;
+    }
+    setLS(LS_KEYS.NOTIFICATIONS, list);
+    return;
+  }
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notifId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Supabase mark single notification read failed, using LocalStorage', err);
+    isUsingFallback = true;
+    await markSingleNotificationAsRead(notifId);
   }
 }
 

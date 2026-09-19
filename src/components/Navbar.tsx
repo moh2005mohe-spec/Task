@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, AppNotification } from '../types';
-import { getNotifications, markNotificationsAsRead } from '../lib/supabase';
-import { Coins, LogOut, Shield, User as UserIcon, Briefcase, PlusCircle, CheckSquare, Bell, CheckCircle2, XCircle, AlertCircle, RefreshCw, X, Check } from 'lucide-react';
+import { getNotifications, markNotificationsAsRead, markSingleNotificationAsRead } from '../lib/supabase';
+import { Coins, LogOut, Shield, User as UserIcon, Briefcase, PlusCircle, CheckSquare, Bell, CheckCircle2, XCircle, AlertCircle, RefreshCw, X, Check, ArrowRight } from 'lucide-react';
 
 interface NavbarProps {
   user: User;
@@ -28,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifPopover, setShowNotifPopover] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState<AppNotification | null>(null);
 
   const fetchUserNotifs = async () => {
     if (!user || !user.email) return;
@@ -50,6 +51,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleMarkAllRead = async () => {
     await markNotificationsAsRead(user.email);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleNotifClick = async (notif: AppNotification) => {
+    setSelectedNotif(notif);
+    setShowNotifPopover(false);
+    if (!notif.read) {
+      setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+      await markSingleNotificationAsRead(notif.id);
+    }
   };
 
   const getNotifIcon = (type: AppNotification['type']) => {
@@ -168,8 +178,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       notifications.map((n) => (
                         <div
                           key={n.id}
-                          className={`p-3.5 transition-colors flex items-start space-x-3 ${
-                            !n.read ? 'bg-indigo-50/40 font-medium' : 'hover:bg-neutral-50/60'
+                          onClick={() => handleNotifClick(n)}
+                          className={`p-3.5 transition-colors flex items-start space-x-3 cursor-pointer ${
+                            !n.read ? 'bg-indigo-50/50 font-medium hover:bg-indigo-50/80' : 'hover:bg-neutral-50/80'
                           }`}
                         >
                           <div className="mt-0.5 p-1.5 rounded-lg bg-white border border-neutral-100 shadow-2xs">
@@ -182,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-[11px] text-neutral-600 leading-snug">{n.message}</p>
+                            <p className="text-[11px] text-neutral-600 leading-snug line-clamp-2">{n.message}</p>
                           </div>
                         </div>
                       ))
@@ -266,6 +277,72 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Notification Detail Modal */}
+      {selectedNotif && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in" id="notif-modal-overlay">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-neutral-100 animate-slide-up">
+            <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-indigo-50/80">
+              <div className="flex items-center space-x-3">
+                <div className="bg-white p-2 rounded-xl shadow-2xs border border-neutral-100">
+                  {getNotifIcon(selectedNotif.type)}
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-neutral-900">{selectedNotif.title}</h3>
+                  <p className="text-[10px] text-neutral-500 font-mono">
+                    {new Date(selectedNotif.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedNotif(null)}
+                className="text-neutral-400 hover:text-neutral-600 p-1.5 rounded-lg hover:bg-white transition-all cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100 text-xs font-medium text-neutral-800 leading-relaxed whitespace-pre-line">
+                {selectedNotif.message}
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-2">
+                {selectedNotif.type.startsWith('submission_') ? (
+                  <button
+                    onClick={() => {
+                      setSelectedNotif(null);
+                      onChangeRole('worker');
+                    }}
+                    className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-indigo-100"
+                  >
+                    <span>View My Tasks & Submissions</span>
+                    <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                  </button>
+                ) : selectedNotif.type.startsWith('task_') ? (
+                  <button
+                    onClick={() => {
+                      setSelectedNotif(null);
+                      onChangeRole('advertiser');
+                    }}
+                    className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-indigo-100"
+                  >
+                    <span>Go to Advertiser Dashboard</span>
+                    <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                  </button>
+                ) : null}
+
+                <button
+                  onClick={() => setSelectedNotif(null)}
+                  className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

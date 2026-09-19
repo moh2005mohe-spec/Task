@@ -95,8 +95,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     setSubmittingProof(true);
 
     try {
+      const existingSub = workerSubmissions.find(s => s.task_id === selectedTask.id);
       const newSubmission: Submission = {
-        id: 'sub-' + Math.random().toString(36).substr(2, 9),
+        id: existingSub ? existingSub.id : ('sub-' + Math.random().toString(36).substr(2, 9)),
         task_id: selectedTask.id,
         worker_email: user.email,
         proof_text: proofText.trim(),
@@ -283,9 +284,6 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                                 Screenshot Required
                               </span>
                             )}
-                            <span className="text-[11px] text-neutral-500 font-medium ml-auto">
-                              Countries: <strong className="text-neutral-700 font-bold">{task.countries.join(', ')}</strong>
-                            </span>
                           </div>
 
                           <div className="text-neutral-700 whitespace-pre-line leading-relaxed">
