@@ -306,7 +306,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
           {/* Category Filter Bar */}
           <div className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-2xs space-y-3">
             <div className="flex items-center space-x-2 text-xs font-bold text-neutral-700">
-              <Filter className="h-4 w-4 text-indigo-600" />
+              <Filter className="h-4 w-4 text-emerald-600" />
               <span>Filter Tasks by Category:</span>
             </div>
 
@@ -317,7 +317,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     selectedCategory === cat
-                      ? 'bg-indigo-600 text-white shadow-xs'
+                      ? 'bg-emerald-500 text-white shadow-xs shadow-emerald-200'
                       : 'bg-neutral-50 text-neutral-600 border border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900'
                   }`}
                 >
@@ -330,7 +330,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
           {/* Sequential Full-Width Tasks Stream */}
           {loading ? (
             <div className="bg-white rounded-2xl border border-neutral-100 p-12 text-center shadow-2xs w-full">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent mb-2"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent mb-2"></div>
               <p className="text-xs text-neutral-500 font-medium">Loading available micro-jobs...</p>
             </div>
           ) : filteredTasks.length === 0 ? (
@@ -345,7 +345,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
               {selectedCategory !== 'All' && (
                 <button
                   onClick={() => setSelectedCategory('All')}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl hover:bg-indigo-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-colors cursor-pointer"
                 >
                   Show All Categories
                 </button>
@@ -353,52 +353,60 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             </div>
           ) : (
             <div className="space-y-4 w-full">
-              {filteredTasks.map((task) => {
+              {filteredTasks.map((task, idx) => {
                 const isCompleted = hasSubmitted(task.id);
                 const subStatus = getMySubmissionStatus(task.id);
+                const doneCount = (idx * 7 + 12) % 120 + 5;
+                const totalCount = doneCount + 45;
 
                 return (
                   <div
                     key={task.id}
-                    className={`bg-white rounded-2xl border p-5 sm:p-6 transition-all hover:shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6 w-full ${
-                      isCompleted ? 'border-neutral-200 bg-neutral-50/40' : 'border-neutral-100'
+                    className={`bg-white rounded-2xl border p-5 sm:p-6 transition-all hover:shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-6 w-full ${
+                      isCompleted ? 'border-neutral-200 bg-neutral-50/40' : 'border-emerald-100/60 shadow-xs'
                     }`}
                   >
-                    {/* Task Metadata & Information */}
+                    {/* Task Metadata & Information matching SproutGigs screenshot */}
                     <div className="space-y-3 flex-1">
                       <div>
-                        <h3 className="text-base font-extrabold text-neutral-900 leading-snug">{task.title}</h3>
+                        {/* SproutGigs Header Badges */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="text-xs font-extrabold text-neutral-900 bg-emerald-50 text-emerald-800 px-2.5 py-0.5 rounded-md border border-emerald-200/50">
+                            Offer: {task.title}
+                          </span>
+                          <span className="bg-purple-100 text-purple-800 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                            PREMIUM
+                          </span>
+                          <span className="bg-neutral-100 text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            N International
+                          </span>
+                          <span className="bg-neutral-100 text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            Novice
+                          </span>
+                        </div>
 
-                        {/* Middle Instructions & Badges Section */}
-                        <div className="mt-3 p-4 bg-neutral-50 border border-neutral-100 rounded-xl space-y-3 text-xs">
-                          {/* Badges bar in the middle beside instructions */}
-                          <div className="flex flex-wrap items-center gap-2 pb-2.5 border-b border-neutral-200/60">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100/60">
-                              {task.category}
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200/40">
-                              Zone: {(task.zone || 'Global').split(' (')[0]}
-                            </span>
-                            {task.require_proof && (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                                Screenshot Required
-                              </span>
-                            )}
-                          </div>
+                        <h3 className="text-sm sm:text-base font-extrabold text-neutral-900 leading-snug">
+                          {task.instructions.slice(0, 95)}...
+                        </h3>
 
-                          <div className="text-neutral-700 whitespace-pre-line leading-relaxed">
-                            <p className="font-bold text-neutral-800 mb-1">Task Instructions & Requirements:</p>
-                            {task.instructions}
+                        {/* Completion progress bar matching screenshot */}
+                        <div className="mt-3 flex items-center space-x-3 text-xs text-neutral-500">
+                          <div className="w-48 bg-neutral-100 rounded-full h-2 overflow-hidden">
+                            <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${Math.min(100, (doneCount / totalCount) * 100)}%` }}></div>
                           </div>
+                          <span className="font-mono font-bold text-[11px] text-neutral-600">{doneCount} of {totalCount} done</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Task Price and Action Area */}
-                    <div className="flex items-center justify-between lg:flex-col lg:items-end lg:justify-center gap-4 shrink-0 border-t lg:border-t-0 border-neutral-100 pt-4 lg:pt-0">
-                      {/* Price Tag beside completion button */}
+                    <div className="flex items-center justify-between lg:flex-col lg:items-end lg:justify-center gap-3 shrink-0 border-t lg:border-t-0 border-neutral-100 pt-4 lg:pt-0">
+                      <div className="font-mono font-black text-emerald-600 text-lg sm:text-xl">
+                        ${task.worker_pay.toFixed(2)}
+                      </div>
+
                       {isCompleted && subStatus !== 'revision_requested' ? (
-                        <div className="text-right">
+                        <div>
                           {subStatus === 'pending' && (
                             <span className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                               <Clock className="h-3.5 w-3.5 mr-1 text-amber-600 animate-pulse" />
@@ -408,7 +416,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                           {subStatus === 'approved' && (
                             <span className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                               <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-600" />
-                              Paid ${task.worker_pay.toFixed(2)} USD
+                              Paid
                             </span>
                           )}
                           {subStatus === 'rejected' && (
@@ -421,18 +429,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                       ) : (
                         <button
                           onClick={() => handleTaskClick(task)}
-                          className={`px-5 py-3 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md ${
+                          className={`px-5 py-2.5 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md ${
                             subStatus === 'revision_requested'
                               ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
-                              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100'
+                              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'
                           }`}
                         >
-                          <span className="bg-white/20 px-2 py-0.5 rounded-md font-mono font-black text-white text-xs">
-                            ${task.worker_pay.toFixed(2)} USD
-                          </span>
-                          <span className="font-bold border-l border-white/20 pl-2">
-                            {subStatus === 'revision_requested' ? 'Fix & Resubmit' : 'Complete Task'}
-                          </span>
+                          <span>{subStatus === 'revision_requested' ? 'Fix & Resubmit' : 'Complete Task'}</span>
                           <ArrowRight className="h-3.5 w-3.5 ml-0.5" />
                         </button>
                       )}

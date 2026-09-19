@@ -83,12 +83,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onChangeRole(user.role === 'admin' ? 'admin' : 'worker')}>
-            <div className="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-indigo-100">
+            <div className="bg-emerald-500 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-emerald-100">
               <CheckSquare className="h-5 w-5" />
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-neutral-900">
-                Task<span className="text-indigo-600">Zone</span>
+                Task<span className="text-emerald-600">Zone</span>
               </span>
               <p className="text-[10px] text-neutral-400 font-medium tracking-wide">MICRO-TASK MARKET</p>
             </div>
@@ -111,9 +111,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Balance Badge */}
             {activeRole !== 'admin' && (
-              <div className="flex items-center bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-xl text-indigo-900 font-medium text-sm shadow-2xs">
-                <Coins className="h-4 w-4 text-indigo-600 mr-1.5" />
-                <span className="font-mono text-indigo-700">${user.balance.toFixed(2)}</span>
+              <div className="flex items-center bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl text-emerald-900 font-medium text-sm shadow-2xs">
+                <Coins className="h-4 w-4 text-emerald-600 mr-1.5" />
+                <span className="font-mono text-emerald-700">${user.balance.toFixed(2)}</span>
               </div>
             )}
 
@@ -124,7 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowNotifPopover(!showNotifPopover);
                   fetchUserNotifs();
                 }}
-                className="p-2 text-neutral-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer relative"
+                className="p-2 text-neutral-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer relative"
                 title="Notifications"
                 id="btn-notifications-bell"
               >
