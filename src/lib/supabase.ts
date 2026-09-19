@@ -988,3 +988,42 @@ export async function resetLoginAttempts(email: string): Promise<void> {
     setLS(LS_LOGIN_ATTEMPTS, attemptsMap);
   }
 }
+
+export async function setUserData(userId: string, updates: Partial<User>): Promise<void> {
+  try {
+    const { error } = await supabase.from('custom_users').update(updates).eq('id', userId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Supabase update user data failed, using LocalStorage', err);
+    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx >= 0) {
+      users[idx] = { ...users[idx], ...updates };
+      setLS(LS_KEYS.USERS, users);
+    }
+  }
+}
+
+export async function deleteUserRecord(userId: string): Promise<void> {
+  try {
+    const { error } = await supabase.from('custom_users').delete().eq('id', userId);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Supabase delete user failed, using LocalStorage', err);
+    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
+    const filtered = users.filter(u => u.id !== userId);
+    setLS(LS_KEYS.USERS, filtered);
+  }
+}
+
+export async function broadcastNotificationToAll(title: string, message: string): Promise<void> {
+  const users = await getUsers();
+  for (const u of users) {
+    await createNotification({
+      recipient_email: u.email,
+      title,
+      message,
+      type: 'general'
+    });
+  }
+}

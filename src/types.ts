@@ -6,6 +6,7 @@ export interface User {
   password?: string;
   kyc_status?: 'unverified' | 'pending' | 'approved' | 'rejected';
   kyc_country?: string;
+  banned?: boolean;
   created_at: string;
 }
 

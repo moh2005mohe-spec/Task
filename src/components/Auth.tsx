@@ -50,6 +50,11 @@ export const Auth: React.FC<AuthProps> = ({
         );
 
         if (found) {
+          if (found.banned) {
+            setError('Your account has been permanently banned by the administrator.');
+            setLoading(false);
+            return;
+          }
           await resetLoginAttempts(cleanEmail);
           onAuthSuccess(found);
         } else {

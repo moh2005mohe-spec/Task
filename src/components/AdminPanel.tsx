@@ -14,6 +14,9 @@ import {
   checkLoginRateLimit,
   recordFailedLoginAttempt,
   resetLoginAttempts,
+  broadcastNotificationToAll,
+  setUserData,
+  deleteUserRecord,
   SETUP_SQL
 } from '../lib/supabase';
 import {
@@ -36,7 +39,11 @@ import {
   Database,
   Users,
   Sliders,
-  FileText
+  FileText,
+  Bell,
+  Trash2,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
 const ADMIN_SESSION_KEY = 'admin_session_unlocked_v1';
@@ -62,8 +69,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
     }
   }, [user]);
 
-  // Admin tabs: 'campaigns' | 'kyc' | 'users' | 'pricing' | 'sql'
-  const [activeTab, setActiveTab] = useState<'campaigns' | 'kyc' | 'users' | 'pricing' | 'sql'>('campaigns');
+  // Admin tabs: 'campaigns' | 'kyc' | 'users' | 'pricing' | 'notifications' | 'sql'
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'kyc' | 'users' | 'pricing' | 'notifications' | 'sql'>('campaigns');
+
+  // Broadcast state
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [broadcastStatus, setBroadcastStatus] = useState('');
 
   // Queue state
   const [pendingCampaigns, setPendingCampaigns] = useState<Task[]>([]);
@@ -220,6 +232,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
     }
   };
 
+  const handleSendBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastTitle || !broadcastMessage) return;
+    try {
+      await broadcastNotificationToAll(broadcastTitle, broadcastMessage);
+      setBroadcastStatus('Broadcast notification successfully sent to all users!');
+      setBroadcastTitle('');
+      setBroadcastMessage('');
+      setTimeout(() => setBroadcastStatus(''), 4000);
+    } catch (err) {
+      setBroadcastStatus('Failed to send broadcast notification.');
+    }
+  };
+
+  const handleBanToggle = async (targetUser: User) => {
+    const newBannedState = !targetUser.banned;
+    await setUserData(targetUser.id, { banned: newBannedState });
+    await loadAdminData();
+  };
+
+  const handleDeleteUser = async (targetUserId: string) => {
+    if (window.confirm('Are you sure you want to permanently delete this user?')) {
+      await deleteUserRecord(targetUserId);
+      await loadAdminData();
+    }
+  };
+
   // Filter users by search
   const filteredUsers = allUsersList.filter(u =>
     u.email.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
@@ -356,6 +395,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         >
           <Sliders className="h-4 w-4" />
           <span>Pricing & Rates</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('notifications')}
+          className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
+            activeTab === 'notifications' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+          }`}
+        >
+          <Bell className="h-4 w-4" />
+          <span>Broadcast Notifications</span>
         </button>
 
         <button
@@ -653,19 +702,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                             </span>
                           )}
                         </td>
-                        <td className="p-4 font-semibold text-neutral-700">{u.kyc_country || 'Not set'}</td>
+                        <td className="p-4 font-semibold text-neutral-700">
+                          {u.kyc_country || 'Not set'}
+                          {u.banned && (
+                            <span className="ml-2 inline-flex items-center text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded-md text-[10px]">
+                              Banned
+                            </span>
+                          )}
+                        </td>
                         <td className="p-4 font-mono font-black text-indigo-900 text-sm">
                           ${u.balance.toFixed(2)} USD
                         </td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-right space-x-2">
                           <button
                             onClick={() => {
                               setEditingUser(u);
                               setNewBalanceInput(u.balance);
                             }}
-                            className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-[11px] rounded-lg transition-all cursor-pointer"
+                            className="px-2.5 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-bold text-[11px] rounded-lg transition-all cursor-pointer"
                           >
                             Edit Balance
+                          </button>
+                          <button
+                            onClick={() => handleBanToggle(u)}
+                            className={`px-2.5 py-1.5 font-bold text-[11px] rounded-lg transition-all cursor-pointer ${
+                              u.banned ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                            }`}
+                            title={u.banned ? 'Unban user' : 'Ban user permanently'}
+                          >
+                            {u.banned ? 'Unban' : 'Ban'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="px-2.5 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold text-[11px] rounded-lg transition-all cursor-pointer"
+                            title="Delete user permanently"
+                          >
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -674,6 +746,72 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: BROADCAST NOTIFICATIONS */}
+      {activeTab === 'notifications' && (
+        <div className="space-y-6 max-w-2xl">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-2xs space-y-6">
+            <div>
+              <h2 className="text-base font-extrabold text-neutral-900 flex items-center">
+                <Bell className="h-5 w-5 mr-2 text-indigo-600" />
+                Send Broadcast Notification to All Users
+              </h2>
+              <p className="text-xs text-neutral-500 mt-1">
+                Compose an announcement or notification message that will be instantly dispatched to all registered users on the platform.
+              </p>
+            </div>
+
+            {broadcastStatus && (
+              <div className={`p-4 rounded-xl text-xs font-bold flex items-center space-x-2 ${
+                broadcastStatus.includes('successfully') ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}>
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>{broadcastStatus}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSendBroadcast} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-2">
+                  Notification Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={broadcastTitle}
+                  onChange={(e) => setBroadcastTitle(e.target.value)}
+                  placeholder="e.g. Important Platform Update & Bonus Reward"
+                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-2">
+                  Notification Message Content
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="Write your announcement message here..."
+                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                ></textarea>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span>Send Broadcast to All Users</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
