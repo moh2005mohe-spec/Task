@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Task, User, ZONES, CATEGORIES } from '../types';
+import { Task, User, ZONES as DEFAULT_ZONES, CATEGORIES as DEFAULT_CATEGORIES, ZoneConfig, CategoryConfig } from '../types';
 import { CONTINENTS } from '../data/countries';
-import { saveTask, updateUserBalance } from '../lib/supabase';
+import { saveTask, updateUserBalance, getPricingSettings } from '../lib/supabase';
 import { ChevronLeft, Info, Calculator, ShieldCheck, Globe, ClipboardList } from 'lucide-react';
 
 interface CreateTaskProps {
@@ -13,12 +13,24 @@ interface CreateTaskProps {
 export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCancel }) => {
   const [title, setTitle] = useState('');
   
+  // Custom pricing state
+  const [zones, setZones] = useState<ZoneConfig[]>(DEFAULT_ZONES);
+  const [categories, setCategories] = useState<CategoryConfig[]>(DEFAULT_CATEGORIES);
+
   // Zone selection
-  const [selectedZoneId, setSelectedZoneId] = useState(ZONES[0].id);
+  const [selectedZoneId, setSelectedZoneId] = useState(DEFAULT_ZONES[0].id);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
   // Category selection
-  const [selectedCategoryId, setSelectedCategoryId] = useState(CATEGORIES[0].id);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(DEFAULT_CATEGORIES[0].id);
+
+  // Load custom pricing on mount
+  useEffect(() => {
+    getPricingSettings().then(pricing => {
+      if (pricing.zones && pricing.zones.length > 0) setZones(pricing.zones);
+      if (pricing.categories && pricing.categories.length > 0) setCategories(pricing.categories);
+    });
+  }, []);
 
   // Campaign settings
   const [duration, setDuration] = useState('3 Days');
@@ -38,8 +50,8 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const currentZone = ZONES.find(z => z.id === selectedZoneId) || ZONES[0];
-  const currentCategory = CATEGORIES.find(c => c.id === selectedCategoryId) || CATEGORIES[0];
+  const currentZone = zones.find(z => z.id === selectedZoneId) || zones[0] || DEFAULT_ZONES[0];
+  const currentCategory = categories.find(c => c.id === selectedCategoryId) || categories[0] || DEFAULT_CATEGORIES[0];
 
   // Recalculate minimum pay and campaign costs when selections change
   useEffect(() => {
@@ -70,11 +82,11 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
   };
 
   const isAllSelected = useMemo(() => {
-    const continent = ZONES.find(z => z.id === selectedZoneId)?.continent;
+    const continent = zones.find(z => z.id === selectedZoneId)?.continent;
     if (continent === 'All') return selectedCountries.length === Object.values(CONTINENTS).flat().length;
     if (continent) return selectedCountries.length === (CONTINENTS[continent]?.length || 0);
     return false;
-  }, [selectedCountries, selectedZoneId]);
+  }, [selectedCountries, selectedZoneId, zones]);
 
   const handleToggleCountry = (country: string) => {
     setSelectedCountries(prev => 
@@ -83,7 +95,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
   };
 
   const handleToggleAll = () => {
-    const continent = ZONES.find(z => z.id === selectedZoneId)?.continent;
+    const continent = zones.find(z => z.id === selectedZoneId)?.continent;
     if (!continent) return;
     
     let allCountries: string[] = [];
@@ -144,7 +156,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
         total_cost: totalCost,
         instructions: instructions.trim(),
         require_proof: requireProof,
-        status: 'approved',
+        status: 'pending_review',
         created_by: user.id,
         created_at: new Date().toISOString()
       };
@@ -222,7 +234,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                 </label>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {ZONES.map((zone) => (
+                  {zones.map((zone) => (
                     <button
                       key={zone.id}
                       type="button"
@@ -294,7 +306,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-                  {CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <button
                       key={category.id}
                       type="button"

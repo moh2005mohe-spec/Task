@@ -2,8 +2,10 @@ export interface User {
   id: string;
   email: string;
   balance: number;
-  role: 'advertiser' | 'admin';
+  role: 'worker' | 'advertiser' | 'admin';
   password?: string;
+  kyc_status?: 'unverified' | 'pending' | 'approved' | 'rejected';
+  kyc_country?: string;
   created_at: string;
 }
 
@@ -35,12 +37,26 @@ export interface Submission {
   submitted_at: string;
 }
 
+export interface KYCVerification {
+  id: string;
+  user_id: string;
+  user_email: string;
+  country: string;
+  front_image: string; // base64 or URL
+  back_image: string;  // base64 or URL
+  selfie_image: string; // base64 or URL
+  status: 'pending' | 'approved' | 'rejected';
+  rejection_reason?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface AppNotification {
   id: string;
   recipient_email: string;
   title: string;
   message: string;
-  type: 'submission_approved' | 'submission_rejected' | 'submission_revision' | 'task_approved' | 'task_rejected' | 'general';
+  type: 'submission_approved' | 'submission_rejected' | 'submission_revision' | 'task_approved' | 'task_rejected' | 'kyc_approved' | 'kyc_rejected' | 'general';
   read: boolean;
   created_at: string;
 }

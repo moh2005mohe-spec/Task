@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User, Task, Submission } from '../types';
+import { User } from '../types';
 import { getTasks, getSubmissions } from '../lib/supabase';
-import { User as UserIcon, Mail, Shield, Coins, Calendar, CheckCircle2, Award, ArrowLeft, Briefcase, PlusCircle, CreditCard, DollarSign } from 'lucide-react';
+import { User as UserIcon, Mail, Coins, Calendar, CheckCircle2, Award, ArrowLeft, Briefcase, PlusCircle, CreditCard, DollarSign, ShieldCheck, AlertCircle, Clock, XCircle, Globe } from 'lucide-react';
+import { KYCModal } from './KYCModal';
 
 interface UserProfilePageProps {
   user: User;
@@ -16,6 +17,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
   onBalanceUpdate,
   onOpenDeposit
 }) => {
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
   const [stats, setStats] = useState({
     tasksCompleted: 0,
     tasksPending: 0,
@@ -154,6 +156,54 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
               <p className="text-[10px] font-bold text-neutral-400 uppercase">Account Identifier</p>
               <p className="text-xs font-mono font-semibold text-neutral-600 mt-0.5 truncate">{user.id}</p>
             </div>
+
+            {/* KYC Account Verification Card */}
+            <div className="p-4 bg-gradient-to-br from-indigo-50/80 to-neutral-50 rounded-2xl border border-indigo-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider flex items-center">
+                  <ShieldCheck className="h-3.5 w-3.5 text-indigo-600 mr-1" />
+                  KYC Verification
+                </span>
+                {user.kyc_status === 'approved' ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600" />
+                    Verified ({user.kyc_country || 'Global'})
+                  </span>
+                ) : user.kyc_status === 'pending' ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    <Clock className="h-3 w-3 mr-1 text-amber-600 animate-pulse" />
+                    Under Review
+                  </span>
+                ) : user.kyc_status === 'rejected' ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    <XCircle className="h-3 w-3 mr-1 text-rose-600" />
+                    Rejected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-200 text-neutral-700">
+                    Unverified
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[11px] text-neutral-600 leading-relaxed">
+                {user.kyc_status === 'approved'
+                  ? `Your identity document for ${user.kyc_country} is verified. You can complete all geotargeted tasks.`
+                  : user.kyc_status === 'pending'
+                  ? 'Your identity documents are currently being reviewed by Admin. Verification takes under 24 hours.'
+                  : 'Verify your national ID & country to execute geotargeted tasks and unlock instant payouts.'}
+              </p>
+
+              {user.kyc_status !== 'approved' && user.kyc_status !== 'pending' && (
+                <button
+                  onClick={() => setIsKycModalOpen(true)}
+                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center space-x-1"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Verify Account (توثيق الحساب)</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -212,6 +262,15 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
           )}
         </div>
       </div>
+
+      <KYCModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+        user={user}
+        onSuccess={(updatedUser) => {
+          onBalanceUpdate(updatedUser);
+        }}
+      />
     </div>
   );
 };

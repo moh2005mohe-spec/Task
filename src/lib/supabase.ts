@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Task, User, Submission, AppNotification } from '../types';
+import { Task, User, Submission, AppNotification, KYCVerification, ZoneConfig, CategoryConfig, ZONES, CATEGORIES } from '../types';
 
 // Supabase URL and Anon Key (provided by user)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://gzrhexrtdvjitifsdcsv.supabase.co';
@@ -8,15 +8,21 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // SQL script for setting up the Supabase database
-export const SETUP_SQL = `-- Create custom_users table
+export const SETUP_SQL = `-- Create custom_users table if not exists
 CREATE TABLE IF NOT EXISTS custom_users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   balance NUMERIC DEFAULT 100.00,
   role TEXT NOT NULL DEFAULT 'advertiser',
   password TEXT NOT NULL,
+  kyc_status TEXT DEFAULT 'unverified',
+  kyc_country TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure columns exist if table was created previously
+ALTER TABLE custom_users ADD COLUMN IF NOT EXISTS kyc_status TEXT DEFAULT 'unverified';
+ALTER TABLE custom_users ADD COLUMN IF NOT EXISTS kyc_country TEXT;
 
 -- Create tasks table
 CREATE TABLE IF NOT EXISTS tasks (
@@ -59,27 +65,56 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Create kyc_verifications table
+CREATE TABLE IF NOT EXISTS kyc_verifications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  country TEXT NOT NULL,
+  front_image TEXT NOT NULL,
+  back_image TEXT NOT NULL,
+  selfie_image TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  rejection_reason TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Create pricing_settings table
+CREATE TABLE IF NOT EXISTS pricing_settings (
+  id TEXT PRIMARY KEY,
+  zones JSONB NOT NULL,
+  categories JSONB NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
 -- Enable Row Level Security (RLS) bypass / public access for ease of use in demo
 ALTER TABLE custom_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kyc_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_settings ENABLE ROW LEVEL SECURITY;
 
 -- Drop policies if they exist to prevent duplicate policy errors on re-run
 DROP POLICY IF EXISTS "Public full access on custom_users" ON custom_users;
 DROP POLICY IF EXISTS "Public full access on tasks" ON tasks;
 DROP POLICY IF EXISTS "Public full access on submissions" ON submissions;
 DROP POLICY IF EXISTS "Public full access on notifications" ON notifications;
+DROP POLICY IF EXISTS "Public full access on kyc_verifications" ON kyc_verifications;
+DROP POLICY IF EXISTS "Public full access on pricing_settings" ON pricing_settings;
 
 -- Allow public read/write policies since we are using anon key for simplicity
 CREATE POLICY "Public full access on custom_users" ON custom_users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on tasks" ON tasks FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on submissions" ON submissions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on kyc_verifications" ON kyc_verifications FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on pricing_settings" ON pricing_settings FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert dummy admin user (password: admin123)
-INSERT INTO custom_users (id, email, balance, role, password, created_at)
-VALUES ('admin-id', 'admin@taskzone.com', 9999.00, 'admin', 'admin123', NOW())
+INSERT INTO custom_users (id, email, balance, role, password, kyc_status, created_at)
+VALUES ('admin-id', 'admin@taskzone.com', 9999.00, 'admin', 'admin123', 'approved', NOW())
 ON CONFLICT (id) DO NOTHING;
 `;
 
@@ -115,7 +150,9 @@ const LS_KEYS = {
   USERS: 'taskzone_fallback_users',
   TASKS: 'taskzone_fallback_tasks',
   SUBMISSIONS: 'taskzone_fallback_submissions',
-  NOTIFICATIONS: 'taskzone_fallback_notifications'
+  NOTIFICATIONS: 'taskzone_fallback_notifications',
+  KYC: 'taskzone_fallback_kyc',
+  PRICING: 'taskzone_fallback_pricing'
 };
 
 const getLS = <T>(key: string, defaultValue: T): T => {
@@ -675,4 +712,154 @@ export async function deleteTaskAndRefund(
       ? `Task deleted successfully. $${refundedAmount.toFixed(2)} USD refunded to your wallet balance.`
       : `Task deleted successfully.`
   };
+}
+
+// KYC Database Functions
+export async function getKYCVerifications(): Promise<KYCVerification[]> {
+  if (isUsingFallback) {
+    return getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+  }
+  try {
+    const { data, error } = await supabase.from('kyc_verifications').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('Supabase fetch KYC failed, using LocalStorage', err);
+    isUsingFallback = true;
+    return getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+  }
+}
+
+export async function saveKYCVerification(verification: KYCVerification): Promise<KYCVerification> {
+  // Update user kyc_status to pending in custom_users
+  const users = await getUsers();
+  const user = users.find(u => u.id === verification.user_id || u.email.toLowerCase() === verification.user_email.toLowerCase());
+  if (user) {
+    user.kyc_status = 'pending';
+    user.kyc_country = verification.country;
+    await saveUser(user);
+  }
+
+  if (isUsingFallback) {
+    const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+    const idx = list.findIndex(k => k.id === verification.id || k.user_email.toLowerCase() === verification.user_email.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = verification;
+    } else {
+      list.unshift(verification);
+    }
+    setLS(LS_KEYS.KYC, list);
+    return verification;
+  }
+  try {
+    const { data, error } = await supabase.from('kyc_verifications').upsert(verification).select().single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.warn('Supabase save KYC failed, using LocalStorage', err);
+    isUsingFallback = true;
+    return saveKYCVerification(verification);
+  }
+}
+
+export async function updateKYCStatus(
+  verificationId: string,
+  userId: string,
+  status: 'approved' | 'rejected',
+  rejectionReason?: string
+): Promise<void> {
+  let targetEmail = '';
+  let targetCountry = '';
+
+  if (isUsingFallback) {
+    const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+    const idx = list.findIndex(k => k.id === verificationId);
+    if (idx >= 0) {
+      list[idx].status = status;
+      list[idx].rejection_reason = rejectionReason;
+      targetEmail = list[idx].user_email;
+      targetCountry = list[idx].country;
+      setLS(LS_KEYS.KYC, list);
+    }
+  } else {
+    try {
+      const { data, error } = await supabase
+        .from('kyc_verifications')
+        .update({ status, rejection_reason: rejectionReason, updated_at: new Date().toISOString() })
+        .eq('id', verificationId)
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) {
+        targetEmail = data.user_email;
+        targetCountry = data.country;
+      }
+    } catch (err) {
+      console.warn('Supabase update KYC failed, using LocalStorage', err);
+      isUsingFallback = true;
+      await updateKYCStatus(verificationId, userId, status, rejectionReason);
+      return;
+    }
+  }
+
+  // Update custom_users status
+  const users = await getUsers();
+  const matchedUser = users.find(u => u.id === userId || (targetEmail && u.email.toLowerCase() === targetEmail.toLowerCase()));
+  if (matchedUser) {
+    matchedUser.kyc_status = status;
+    if (status === 'approved' && targetCountry) {
+      matchedUser.kyc_country = targetCountry;
+    }
+    await saveUser(matchedUser);
+
+    // Send notification to user
+    await createNotification({
+      recipient_email: matchedUser.email,
+      title: status === 'approved' ? 'Identity Verified! (KYC Approved)' : 'KYC Verification Rejected',
+      message: status === 'approved'
+        ? `Your identity document for ${targetCountry || matchedUser.kyc_country || 'your country'} has been verified by Admin. You can now execute micro-tasks!`
+        : `Your KYC verification request was rejected. Reason: ${rejectionReason || 'Documents unclear or unreadable. Please resubmit.'}`,
+      type: status === 'approved' ? 'kyc_approved' : 'kyc_rejected'
+    });
+  }
+}
+
+// Pricing Settings Functions
+export async function getPricingSettings(): Promise<{ zones: ZoneConfig[]; categories: CategoryConfig[] }> {
+  if (isUsingFallback) {
+    const saved = getLS<{ zones: ZoneConfig[]; categories: CategoryConfig[] } | null>(LS_KEYS.PRICING, null);
+    if (saved) return saved;
+    return { zones: ZONES, categories: CATEGORIES };
+  }
+  try {
+    const { data, error } = await supabase.from('pricing_settings').select('*').eq('id', 'default_pricing').maybeSingle();
+    if (error || !data) {
+      return { zones: ZONES, categories: CATEGORIES };
+    }
+    return {
+      zones: data.zones || ZONES,
+      categories: data.categories || CATEGORIES
+    };
+  } catch (err) {
+    console.warn('Supabase fetch pricing failed, using default', err);
+    isUsingFallback = true;
+    const saved = getLS<{ zones: ZoneConfig[]; categories: CategoryConfig[] } | null>(LS_KEYS.PRICING, null);
+    return saved || { zones: ZONES, categories: CATEGORIES };
+  }
+}
+
+export async function savePricingSettings(zones: ZoneConfig[], categories: CategoryConfig[]): Promise<void> {
+  const payload = { id: 'default_pricing', zones, categories, updated_at: new Date().toISOString() };
+  if (isUsingFallback) {
+    setLS(LS_KEYS.PRICING, { zones, categories });
+    return;
+  }
+  try {
+    const { error } = await supabase.from('pricing_settings').upsert(payload);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Supabase save pricing failed, using LocalStorage', err);
+    isUsingFallback = true;
+    setLS(LS_KEYS.PRICING, { zones, categories });
+  }
 }

@@ -103,39 +103,25 @@ export const Auth: React.FC<AuthProps> = ({
     }
   };
 
-  const loginDemoAccount = async (role: 'advertiser' | 'admin') => {
+  const loginDemoAccount = async (role: 'admin') => {
     setLoading(true);
     setError('');
     try {
-      if (role === 'admin') {
-        setEmail('admin@taskzone.com');
-        setPassword('admin123');
-        const adminUser: User = {
-          id: 'admin-id',
-          email: 'admin@taskzone.com',
-          balance: 9999.00,
-          role: 'admin',
-          password: 'admin123',
-          created_at: new Date().toISOString()
-        };
-        await saveUser(adminUser);
-        onAuthSuccess(adminUser);
-      } else {
-        setEmail('demo@taskzone.com');
-        setPassword('password123');
-        const advertiserUser: User = {
-          id: 'demo-advertiser',
-          email: 'demo@taskzone.com',
-          balance: 100.00,
-          role: 'advertiser',
-          password: 'password123',
-          created_at: new Date().toISOString()
-        };
-        await saveUser(advertiserUser);
-        onAuthSuccess(advertiserUser);
-      }
+      setEmail('admin@taskzone.com');
+      setPassword('admin123');
+      const adminUser: User = {
+        id: 'admin-id',
+        email: 'admin@taskzone.com',
+        balance: 9999.00,
+        role: 'admin',
+        password: 'admin123',
+        created_at: new Date().toISOString()
+      };
+      await saveUser(adminUser);
+      localStorage.setItem('admin_session_unlocked_v1', 'true');
+      onAuthSuccess(adminUser);
     } catch (err: any) {
-      setError('Failed to log in with demo account.');
+      setError('Failed to log in with admin demo account.');
     } finally {
       setLoading(false);
     }
@@ -265,34 +251,22 @@ export const Auth: React.FC<AuthProps> = ({
             </button>
           </div>
 
-          {/* Quick Demo Accout logins */}
+          {/* Quick Demo Account logins */}
           <div className="mt-6 pt-6 border-t border-neutral-100">
             <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider text-center mb-3">
-              Fast-Track Testing Accounts
+              Fast-Track Administrator Access
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => loginDemoAccount('advertiser')}
-                disabled={loading}
-                className="py-2.5 px-3 border border-indigo-100 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-                <span>Advertiser Demo</span>
-              </button>
+            <div>
               <button
                 type="button"
                 onClick={() => loginDemoAccount('admin')}
                 disabled={loading}
-                className="py-2.5 px-3 border border-purple-100 rounded-xl text-xs font-semibold text-purple-700 bg-purple-50/50 hover:bg-purple-50 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                className="w-full py-3 px-4 border border-purple-200 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-all flex items-center justify-center space-x-2 cursor-pointer shadow-2xs"
               >
-                <Shield className="h-3.5 w-3.5 text-purple-500" />
-                <span>Admin Demo</span>
+                <Shield className="h-4 w-4 text-purple-600" />
+                <span>Admin Demo Access</span>
               </button>
             </div>
-            <p className="text-[10px] text-neutral-400 text-center mt-2.5 italic">
-              * Advertiser starts with $100.00 mock balance to launch test campaigns immediately.
-            </p>
           </div>
         </div>
       </div>

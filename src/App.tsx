@@ -157,6 +157,7 @@ export default function App() {
               />
             ) : activeRole === 'admin' ? (
               <AdminPanel
+                user={user}
                 onShowSqlModal={() => setShowSqlModal(true)}
                 isUsingFallback={isUsingFallback}
               />

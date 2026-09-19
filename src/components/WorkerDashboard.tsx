@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission, CATEGORIES } from '../types';
 import { getTasks, saveSubmission, getSubmissions } from '../lib/supabase';
-import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight } from 'lucide-react';
+import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
+import { KYCModal } from './KYCModal';
 
 interface WorkerDashboardProps {
   user: User;
@@ -13,6 +14,10 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
   const [tasks, setTasks] = useState<Task[]>([]);
   const [workerSubmissions, setWorkerSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // KYC Enforcer Modals
+  const [kycWarningModal, setKycWarningModal] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
   // Sub-tab navigation: 'jobs' | 'submissions'
   const [activeTab, setActiveTab] = useState<'jobs' | 'submissions'>('jobs');
@@ -29,8 +34,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     setLoading(true);
     try {
       const allTasks = await getTasks();
-      // Include all active / approved / live tasks from database
-      const liveTasks = allTasks.filter(t => t.status === 'approved' || t.status === 'pending_review' || !t.status);
+      // Only display tasks approved by Admin
+      const liveTasks = allTasks.filter(t => t.status === 'approved');
       setTasks(liveTasks);
 
       const allSubmissions = await getSubmissions();
@@ -123,6 +128,39 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
   const getMySubmissionStatus = (taskId: string) => {
     const found = workerSubmissions.find(s => s.task_id === taskId);
     return found ? found.status : null;
+  };
+
+  const handleTaskClick = (task: Task) => {
+    // 1. Check KYC verification status
+    if (user.kyc_status !== 'approved') {
+      setKycWarningModal({
+        open: true,
+        message: 'يجب عليك توثيق حسابك عبر (KYC) أولاً لتتمكن من تنفيذ المهام. هذا التوثيق يساعدنا في التأكد من هويتك واستهداف دولتك بالمهام المناسبة.'
+      });
+      return;
+    }
+
+    // 2. Check Country Geotargeting
+    const userCountry = user.kyc_country || '';
+    const taskCountries = task.countries || [];
+    const isGlobalTask = taskCountries.some(c => c.toLowerCase().includes('all') || c.toLowerCase().includes('international'));
+
+    if (!isGlobalTask && userCountry && taskCountries.length > 0) {
+      const isTargeted = taskCountries.some(c => c.toLowerCase() === userCountry.toLowerCase() || userCountry.toLowerCase().includes(c.toLowerCase()));
+      if (!isTargeted) {
+        setKycWarningModal({
+          open: true,
+          message: `هذه المهمة مخصصة لمستخدمي دول: (${taskCountries.join(', ')}). دولتك الموثقة هي (${userCountry}). لا يمكنك تنفيذ هذه المهمة.`
+        });
+        return;
+      }
+    }
+
+    if (onSelectTask) {
+      onSelectTask(task);
+    } else {
+      handleOpenSubmission(task);
+    }
   };
 
   // Filter out tasks that the worker has already submitted so they disappear from Available Tasks
@@ -323,13 +361,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                         </div>
                       ) : (
                         <button
-                          onClick={() => {
-                            if (onSelectTask) {
-                              onSelectTask(task);
-                            } else {
-                              handleOpenSubmission(task);
-                            }
-                          }}
+                          onClick={() => handleTaskClick(task)}
                           className={`px-5 py-3 font-bold text-xs rounded-xl flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md ${
                             subStatus === 'revision_requested'
                               ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
@@ -655,6 +687,64 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
           </div>
         </div>
       )}
+
+      {/* KYC Warning / Requirement Prompt Modal */}
+      {kycWarningModal.open && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-center relative border border-neutral-100">
+            <button
+              onClick={() => setKycWarningModal({ open: false, message: '' })}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1.5 rounded-full bg-neutral-100"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="mx-auto h-14 w-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
+              <ShieldCheck className="h-7 w-7" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-extrabold text-neutral-900">
+                توثيق الحساب مطلوب (KYC Required)
+              </h3>
+              <p className="text-xs text-neutral-600 leading-relaxed dir-rtl text-right">
+                {kycWarningModal.message}
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-2">
+              {user.kyc_status !== 'approved' && user.kyc_status !== 'pending' && (
+                <button
+                  onClick={() => {
+                    setKycWarningModal({ open: false, message: '' });
+                    setIsKycModalOpen(true);
+                  }}
+                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>توثيق الحساب الآن (Start KYC)</span>
+                </button>
+              )}
+              <button
+                onClick={() => setKycWarningModal({ open: false, message: '' })}
+                className="w-full py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                إغلاق (Close)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KYC Upload Modal */}
+      <KYCModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+        user={user}
+        onSuccess={(updatedUser) => {
+          onBalanceUpdate(updatedUser);
+        }}
+      />
     </div>
   );
 };
