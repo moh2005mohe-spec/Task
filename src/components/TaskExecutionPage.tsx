@@ -137,15 +137,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
         </div>
 
         {/* Task Details Info Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-100">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Est. Completion</span>
-            <span className="text-xs font-bold text-neutral-800 flex items-center mt-1">
-              <Clock className="h-3.5 w-3.5 mr-1 text-indigo-500" />
-              {task.duration || '5-10 mins'}
-            </span>
-          </div>
-
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
           <div className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-100">
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Campaign Budget</span>
             <span className="text-xs font-bold text-neutral-800 flex items-center mt-1 font-mono">
@@ -154,7 +146,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
             </span>
           </div>
 
-          <div className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-100 col-span-2 sm:col-span-1">
+          <div className="bg-neutral-50 p-3.5 rounded-xl border border-neutral-100">
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Target Workers</span>
             <span className="text-xs font-bold text-neutral-800 mt-1 block">
               {task.workers_needed} Total Openings

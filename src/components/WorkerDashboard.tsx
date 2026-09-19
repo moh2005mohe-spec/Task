@@ -279,34 +279,34 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                   >
                     {/* Task Metadata & Information */}
                     <div className="space-y-3 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100/50">
-                          {task.category}
-                        </span>
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium bg-neutral-100 text-neutral-600">
-                          Zone: {task.zone.split(' (')[0]}
-                        </span>
-                        {task.require_proof && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                            Screenshot Required
-                          </span>
-                        )}
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold text-neutral-500 bg-neutral-50 border border-neutral-100">
-                          <Clock className="h-3 w-3 mr-1 text-indigo-500" />
-                          Est: {task.duration || '5-10 mins'}
-                        </span>
-                      </div>
-
                       <div>
-                        <h3 className="text-base font-bold text-neutral-900 leading-snug">{task.title}</h3>
-                        <div className="mt-2.5 p-3.5 bg-neutral-50 border border-neutral-100 rounded-xl text-xs text-neutral-600 whitespace-pre-line leading-relaxed">
-                          <p className="font-bold text-neutral-700 mb-1">Instructions:</p>
-                          {task.instructions}
-                        </div>
-                      </div>
+                        <h3 className="text-base font-extrabold text-neutral-900 leading-snug">{task.title}</h3>
 
-                      <div className="text-[11px] text-neutral-400 font-medium">
-                        Target Countries: <span className="font-semibold text-neutral-600">{task.countries.join(', ')}</span>
+                        {/* Middle Instructions & Badges Section */}
+                        <div className="mt-3 p-4 bg-neutral-50 border border-neutral-100 rounded-xl space-y-3 text-xs">
+                          {/* Badges bar in the middle beside instructions */}
+                          <div className="flex flex-wrap items-center gap-2 pb-2.5 border-b border-neutral-200/60">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-100/60">
+                              {task.category}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200/40">
+                              Zone: {task.zone.split(' (')[0]}
+                            </span>
+                            {task.require_proof && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                                Screenshot Required
+                              </span>
+                            )}
+                            <span className="text-[11px] text-neutral-500 font-medium ml-auto">
+                              Countries: <strong className="text-neutral-700 font-bold">{task.countries.join(', ')}</strong>
+                            </span>
+                          </div>
+
+                          <div className="text-neutral-700 whitespace-pre-line leading-relaxed">
+                            <p className="font-bold text-neutral-800 mb-1">Task Instructions & Requirements:</p>
+                            {task.instructions}
+                          </div>
+                        </div>
                       </div>
                     </div>
 

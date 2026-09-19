@@ -35,6 +35,16 @@ export interface Submission {
   submitted_at: string;
 }
 
+export interface AppNotification {
+  id: string;
+  recipient_email: string;
+  title: string;
+  message: string;
+  type: 'submission_approved' | 'submission_rejected' | 'submission_revision' | 'task_approved' | 'task_rejected' | 'general';
+  read: boolean;
+  created_at: string;
+}
+
 export interface ZoneConfig {
   id: string;
   name: string;

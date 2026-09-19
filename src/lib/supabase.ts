@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Task, User, Submission } from '../types';
+import { Task, User, Submission, AppNotification } from '../types';
 
 // Supabase URL and Anon Key (provided by user)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://gzrhexrtdvjitifsdcsv.supabase.co';
@@ -48,15 +48,28 @@ CREATE TABLE IF NOT EXISTS submissions (
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Create notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  recipient_email TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'general',
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS) bypass / public access for ease of use in demo
 ALTER TABLE custom_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read/write policies since we are using anon key for simplicity
 CREATE POLICY "Public full access on custom_users" ON custom_users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on tasks" ON tasks FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on submissions" ON submissions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert dummy admin user (password: admin123)
 INSERT INTO custom_users (id, email, balance, role, password, created_at)
@@ -95,7 +108,8 @@ export async function testDbConnection(): Promise<{ connected: boolean; hasTable
 const LS_KEYS = {
   USERS: 'taskzone_fallback_users',
   TASKS: 'taskzone_fallback_tasks',
-  SUBMISSIONS: 'taskzone_fallback_submissions'
+  SUBMISSIONS: 'taskzone_fallback_submissions',
+  NOTIFICATIONS: 'taskzone_fallback_notifications'
 };
 
 const getLS = <T>(key: string, defaultValue: T): T => {
@@ -271,22 +285,44 @@ export async function saveTask(task: Task): Promise<Task> {
 }
 
 export async function updateTaskStatus(taskId: string, status: 'approved' | 'rejected'): Promise<void> {
+  let targetTask: Task | undefined;
   if (isUsingFallback) {
     const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
     const idx = tasks.findIndex(t => t.id === taskId);
     if (idx >= 0) {
       tasks[idx].status = status;
+      targetTask = tasks[idx];
       setLS(LS_KEYS.TASKS, tasks);
     }
-    return;
+  } else {
+    try {
+      const { data, error } = await supabase.from('tasks').update({ status }).eq('id', taskId).select().single();
+      if (error) throw error;
+      targetTask = data;
+    } catch (err) {
+      console.warn('Supabase update task status failed, using LocalStorage', err);
+      isUsingFallback = true;
+      await updateTaskStatus(taskId, status);
+      return;
+    }
   }
-  try {
-    const { error } = await supabase.from('tasks').update({ status }).eq('id', taskId);
-    if (error) throw error;
-  } catch (err) {
-    console.warn('Supabase update task status failed, using LocalStorage', err);
-    isUsingFallback = true;
-    await updateTaskStatus(taskId, status);
+
+  // Create notification for campaign creator
+  if (targetTask) {
+    const users = await getUsers();
+    const creator = users.find(u => u.id === targetTask!.created_by || u.email.toLowerCase() === targetTask!.created_by.toLowerCase());
+    const recipientEmail = creator ? creator.email : targetTask.created_by;
+
+    if (recipientEmail) {
+      await createNotification({
+        recipient_email: recipientEmail,
+        title: status === 'approved' ? 'Campaign Approved & Live!' : 'Campaign Declined',
+        message: status === 'approved'
+          ? `Your campaign "${targetTask.title}" has been approved by Admin and is now live for workers.`
+          : `Your campaign "${targetTask.title}" was declined by Admin. Your unspent budget has been refunded.`,
+        type: status === 'approved' ? 'task_approved' : 'task_rejected'
+      });
+    }
   }
 }
 
@@ -367,23 +403,142 @@ export async function updateSubmissionStatus(
   status: 'approved' | 'rejected' | 'revision_requested',
   feedback?: string
 ): Promise<void> {
+  let updatedSub: Submission | undefined;
   if (isUsingFallback) {
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
     const idx = submissions.findIndex(s => s.id === submissionId);
     if (idx >= 0) {
       submissions[idx].status = status;
       submissions[idx].feedback = feedback;
+      updatedSub = submissions[idx];
       setLS(LS_KEYS.SUBMISSIONS, submissions);
     }
+  } else {
+    try {
+      const { data, error } = await supabase.from('submissions').update({ status, feedback }).eq('id', submissionId).select().single();
+      if (error) throw error;
+      updatedSub = data;
+    } catch (err) {
+      console.warn('Supabase update submission status failed, using LocalStorage', err);
+      isUsingFallback = true;
+      await updateSubmissionStatus(submissionId, status, feedback);
+      return;
+    }
+  }
+
+  // Dispatch notification to worker
+  if (updatedSub) {
+    const tasks = await getTasks();
+    const matchedTask = tasks.find(t => t.id === updatedSub!.task_id);
+    const taskTitle = matchedTask ? matchedTask.title : 'Task';
+    const pay = matchedTask ? matchedTask.worker_pay : 0;
+
+    let notifTitle = 'Submission Update';
+    let notifMsg = `Your submission for "${taskTitle}" status was updated to ${status}.`;
+    let notifType: AppNotification['type'] = 'general';
+
+    if (status === 'approved') {
+      notifTitle = 'Submission Approved & Paid!';
+      notifMsg = `Congratulations! Your submission for "${taskTitle}" was approved and $${pay.toFixed(2)} USD has been credited to your balance.`;
+      notifType = 'submission_approved';
+    } else if (status === 'rejected') {
+      notifTitle = 'Submission Declined';
+      notifMsg = `Your submission for "${taskTitle}" was declined by the advertiser.`;
+      notifType = 'submission_rejected';
+    } else if (status === 'revision_requested') {
+      notifTitle = 'Revision Requested';
+      notifMsg = `Advertiser requested a revision for "${taskTitle}". Note: ${feedback || 'Please update your proof.'}`;
+      notifType = 'submission_revision';
+    }
+
+    await createNotification({
+      recipient_email: updatedSub.worker_email,
+      title: notifTitle,
+      message: notifMsg,
+      type: notifType
+    });
+  }
+}
+
+// Notification database functions
+export async function getNotifications(userEmailOrId: string): Promise<AppNotification[]> {
+  if (!userEmailOrId) return [];
+  const normalized = userEmailOrId.toLowerCase();
+
+  if (isUsingFallback) {
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    return list.filter(n => n.recipient_email.toLowerCase() === normalized);
+  }
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .ilike('recipient_email', normalized)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('Supabase fetch notifications failed, using LocalStorage', err);
+    isUsingFallback = true;
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    return list.filter(n => n.recipient_email.toLowerCase() === normalized);
+  }
+}
+
+export async function createNotification(
+  notification: Omit<AppNotification, 'id' | 'created_at' | 'read'>
+): Promise<AppNotification> {
+  const newNotif: AppNotification = {
+    ...notification,
+    id: 'notif-' + Math.random().toString(36).substr(2, 9),
+    read: false,
+    created_at: new Date().toISOString()
+  };
+
+  if (isUsingFallback) {
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    list.unshift(newNotif);
+    setLS(LS_KEYS.NOTIFICATIONS, list);
+    return newNotif;
+  }
+  try {
+    const { data, error } = await supabase.from('notifications').insert(newNotif).select().single();
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.warn('Supabase create notification failed, using LocalStorage', err);
+    isUsingFallback = true;
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    list.unshift(newNotif);
+    setLS(LS_KEYS.NOTIFICATIONS, list);
+    return newNotif;
+  }
+}
+
+export async function markNotificationsAsRead(userEmailOrId: string): Promise<void> {
+  if (!userEmailOrId) return;
+  const normalized = userEmailOrId.toLowerCase();
+
+  if (isUsingFallback) {
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    list.forEach(n => {
+      if (n.recipient_email.toLowerCase() === normalized) {
+        n.read = true;
+      }
+    });
+    setLS(LS_KEYS.NOTIFICATIONS, list);
     return;
   }
   try {
-    const { error } = await supabase.from('submissions').update({ status, feedback }).eq('id', submissionId);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .ilike('recipient_email', normalized);
     if (error) throw error;
   } catch (err) {
-    console.warn('Supabase update submission status failed, using LocalStorage', err);
+    console.warn('Supabase mark notifications read failed, using LocalStorage', err);
     isUsingFallback = true;
-    await updateSubmissionStatus(submissionId, status, feedback);
+    await markNotificationsAsRead(userEmailOrId);
   }
 }
 

@@ -33,10 +33,10 @@ export default function App() {
         const savedSessionStr = localStorage.getItem(SESSION_KEY);
         if (savedSessionStr) {
           const session = JSON.parse(savedSessionStr);
-          if (session && session.user && session.expiresAt && Date.now() < session.expiresAt) {
-            setUser(session.user);
-            setActiveRole(session.user.role === 'admin' ? 'admin' : 'advertiser');
-          } else {
+            if (session && session.user && session.expiresAt && Date.now() < session.expiresAt) {
+              setUser(session.user);
+              setActiveRole(session.user.role === 'admin' ? 'admin' : 'worker');
+            } else {
             // Expired session (> 3 hours)
             localStorage.removeItem(SESSION_KEY);
           }
