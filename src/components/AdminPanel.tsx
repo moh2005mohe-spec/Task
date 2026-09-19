@@ -277,7 +277,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <div>
           <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight flex items-center">
             <Shield className="h-6 w-6 text-indigo-600 mr-2.5" />
-            Administrator Workspace (لوحة التحكم)
+            Administrator Workspace
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
             Review campaigns, verify user KYC identity documents, manage registered users, and customize zone & category pricing.
@@ -362,7 +362,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
-              Campaign Review Queue (مراجعة المهام)
+              Campaign Review Queue
             </h2>
             <span className="text-xs text-neutral-400 font-medium">
               Campaigns require admin approval before becoming visible to workers.
@@ -458,7 +458,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
-              Identity Verification Requests (طلبات توثيق الحسابات)
+              Identity Verification Requests
             </h2>
             <span className="text-xs text-neutral-400 font-medium">
               Inspect National ID cards and selfies before approving KYC identity verification.
@@ -500,7 +500,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Front Image */}
                     <div className="space-y-1.5">
-                      <span className="text-xs font-bold text-neutral-600">Front Side ID / وجه الهوية</span>
+                      <span className="text-xs font-bold text-neutral-600">Front Side ID</span>
                       <div
                         onClick={() => setInspectedImage({ url: kyc.front_image, title: 'Front Side of ID' })}
                         className="relative h-36 bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-200 cursor-pointer group"
@@ -514,7 +514,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
                     {/* Back Image */}
                     <div className="space-y-1.5">
-                      <span className="text-xs font-bold text-neutral-600">Back Side ID / ظهر الهوية</span>
+                      <span className="text-xs font-bold text-neutral-600">Back Side ID</span>
                       <div
                         onClick={() => setInspectedImage({ url: kyc.back_image, title: 'Back Side of ID' })}
                         className="relative h-36 bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-200 cursor-pointer group"
@@ -528,7 +528,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
                     {/* Selfie Image */}
                     <div className="space-y-1.5">
-                      <span className="text-xs font-bold text-neutral-600">Selfie holding ID / الشخصية</span>
+                      <span className="text-xs font-bold text-neutral-600">Selfie holding ID</span>
                       <div
                         onClick={() => setInspectedImage({ url: kyc.selfie_image, title: 'Selfie holding ID' })}
                         className="relative h-36 bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-200 cursor-pointer group"
@@ -569,7 +569,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
-              Registered Users Directory (جميع المستخدمين)
+              Registered Users Directory
             </h2>
 
             {/* Search Input */}
@@ -672,7 +672,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
-                Category & Zone Pricing Controls (التحكم بأسعار الفئات والدول)
+                Category & Zone Pricing Controls
               </h2>
               <p className="text-xs text-neutral-500 mt-0.5">
                 Adjust minimum execution prices ($ USD per task worker). These rates automatically apply to task creation.
@@ -698,7 +698,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
             <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4">
               <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center">
                 <Globe className="h-4 w-4 text-indigo-600 mr-1.5" />
-                Zone Minimum Rates (أسعار المناطق)
+                Zone Minimum Rates
               </h3>
               <div className="space-y-3">
                 {zones.map((z, idx) => (
@@ -732,7 +732,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
             <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4">
               <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center">
                 <Tag className="h-4 w-4 text-indigo-600 mr-1.5" />
-                Category Minimum Rates (أسعار الفئات)
+                Category Minimum Rates
               </h3>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {categories.map((c, idx) => (
@@ -769,7 +769,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-neutral-800 uppercase tracking-wider">
-              Supabase Database SQL Setup Schema (كود قاعدة البيانات)
+              Supabase Database SQL Setup Schema
             </h2>
             <button
               onClick={() => {

@@ -135,27 +135,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     if (user.kyc_status !== 'approved') {
       setKycWarningModal({
         open: true,
-        message: 'يجب عليك توثيق حسابك عبر (KYC) أولاً لتتمكن من تنفيذ المهام. هذا التوثيق يساعدنا في التأكد من هويتك واستهداف دولتك بالمهام المناسبة.'
+        message: 'You must verify your account with KYC first to be able to execute tasks and receive payouts.'
       });
       return;
     }
 
-    // 2. Check Country Geotargeting
-    const userCountry = user.kyc_country || '';
-    const taskCountries = task.countries || [];
-    const isGlobalTask = taskCountries.some(c => c.toLowerCase().includes('all') || c.toLowerCase().includes('international'));
-
-    if (!isGlobalTask && userCountry && taskCountries.length > 0) {
-      const isTargeted = taskCountries.some(c => c.toLowerCase() === userCountry.toLowerCase() || userCountry.toLowerCase().includes(c.toLowerCase()));
-      if (!isTargeted) {
-        setKycWarningModal({
-          open: true,
-          message: `هذه المهمة مخصصة لمستخدمي دول: (${taskCountries.join(', ')}). دولتك الموثقة هي (${userCountry}). لا يمكنك تنفيذ هذه المهمة.`
-        });
-        return;
-      }
-    }
-
+    // 2. Direct task execution without restrictive geo-blocking
     if (onSelectTask) {
       onSelectTask(task);
     } else {
@@ -705,9 +690,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
 
             <div className="space-y-2">
               <h3 className="text-lg font-extrabold text-neutral-900">
-                توثيق الحساب مطلوب (KYC Required)
+                KYC Verification Required
               </h3>
-              <p className="text-xs text-neutral-600 leading-relaxed dir-rtl text-right">
+              <p className="text-xs text-neutral-600 leading-relaxed text-center">
                 {kycWarningModal.message}
               </p>
             </div>
@@ -722,14 +707,14 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                   className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  <span>توثيق الحساب الآن (Start KYC)</span>
+                  <span>Start KYC Verification</span>
                 </button>
               )}
               <button
                 onClick={() => setKycWarningModal({ open: false, message: '' })}
                 className="w-full py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
               >
-                إغلاق (Close)
+                Close
               </button>
             </div>
           </div>

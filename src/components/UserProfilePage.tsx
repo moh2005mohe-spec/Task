@@ -200,7 +200,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                   className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center space-x-1"
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Verify Account (توثيق الحساب)</span>
+                  <span>Verify Account (KYC)</span>
                 </button>
               )}
             </div>

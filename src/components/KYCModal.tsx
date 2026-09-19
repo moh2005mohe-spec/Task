@@ -119,9 +119,9 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-neutral-900">Identity Verification (KYC) / توثيق الحساب</h2>
+            <h2 className="text-xl font-extrabold text-neutral-900">Identity Verification (KYC)</h2>
             <p className="text-xs text-neutral-500 mt-0.5">
-              Verify your country and identity to access geotargeted high-paying micro-jobs.
+              Verify your identity to access tasks and enable account withdrawals.
             </p>
           </div>
         </div>
@@ -138,7 +138,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
           <div className="space-y-2">
             <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider flex items-center">
               <Globe className="h-4 w-4 text-indigo-600 mr-1.5" />
-              1. Select Country of Residence / اختر دولتك
+              1. Select Country of Residence
             </label>
             <select
               value={country}
@@ -152,20 +152,20 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
               ))}
             </select>
             <p className="text-[11px] text-neutral-400">
-              * Note: Your tasks will be filtered based on advertisers targeting your verified country.
+              * Note: Country verification ensures your profile legitimacy and compliance with micro-task standards.
             </p>
           </div>
 
           {/* Step 2: Upload Documents Grid */}
           <div className="space-y-4 pt-2">
             <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">
-              2. Capture & Upload Identity Proofs / رفع بطاقة الهوية
+              2. Capture & Upload Identity Documents
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Front of ID */}
               <div className="space-y-2">
-                <span className="text-[11px] font-bold text-neutral-600 block">ID Front / الأمام</span>
+                <span className="text-[11px] font-bold text-neutral-600 block">ID Front</span>
                 <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-3 text-center bg-neutral-50 hover:bg-neutral-100 transition-all relative cursor-pointer min-h-[140px] flex flex-col items-center justify-center">
                   {frontImage ? (
                     <div className="relative w-full h-28 rounded-xl overflow-hidden">
@@ -196,7 +196,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
 
               {/* Back of ID */}
               <div className="space-y-2">
-                <span className="text-[11px] font-bold text-neutral-600 block">ID Back / الخلف</span>
+                <span className="text-[11px] font-bold text-neutral-600 block">ID Back</span>
                 <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-3 text-center bg-neutral-50 hover:bg-neutral-100 transition-all relative cursor-pointer min-h-[140px] flex flex-col items-center justify-center">
                   {backImage ? (
                     <div className="relative w-full h-28 rounded-xl overflow-hidden">
@@ -227,7 +227,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
 
               {/* Selfie holding ID */}
               <div className="space-y-2">
-                <span className="text-[11px] font-bold text-neutral-600 block">Selfie with ID / صورة شخصية</span>
+                <span className="text-[11px] font-bold text-neutral-600 block">Selfie with ID</span>
                 <div className="border-2 border-dashed border-neutral-200 rounded-2xl p-3 text-center bg-neutral-50 hover:bg-neutral-100 transition-all relative cursor-pointer min-h-[140px] flex flex-col items-center justify-center">
                   {selfieImage ? (
                     <div className="relative w-full h-28 rounded-xl overflow-hidden">
