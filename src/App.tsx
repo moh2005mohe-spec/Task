@@ -105,7 +105,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900" id="app-root">
+    <div className="min-h-screen bg-neutral-50 flex flex-col font-sans selection:bg-emerald-100 selection:text-emerald-900" id="app-root">
       {user ? (
         <>
           {/* Main App Layout */}

@@ -22,14 +22,14 @@ export const SqlSetupModal: React.FC<SqlSetupModalProps> = ({ isOpen, onClose })
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in" id="sql-modal-overlay">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-neutral-100 animate-slide-up" id="sql-modal-container">
         {/* Modal Header */}
-        <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-indigo-50">
+        <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-emerald-50">
           <div className="flex items-center space-x-3">
-            <div className="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center">
+            <div className="bg-emerald-600 text-white p-2 rounded-xl flex items-center justify-center">
               <Database className="h-5 w-5" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-neutral-900">Configure Supabase Database</h3>
-              <p className="text-xs text-indigo-700 font-medium">Follow these steps to unlock persistent cloud storage</p>
+              <p className="text-xs text-emerald-700 font-medium">Follow these steps to unlock persistent cloud storage</p>
             </div>
           </div>
           <button
@@ -56,7 +56,7 @@ export const SqlSetupModal: React.FC<SqlSetupModalProps> = ({ isOpen, onClose })
 
           <div className="space-y-3">
             <h4 className="font-bold text-neutral-800 text-sm flex items-center">
-              <span className="flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full h-5 w-5 text-xs mr-2 font-mono">1</span>
+              <span className="flex items-center justify-center bg-emerald-100 text-emerald-800 rounded-full h-5 w-5 text-xs mr-2 font-mono">1</span>
               Open Supabase SQL Editor
             </h4>
             <p className="text-xs pl-7 text-neutral-500">
@@ -65,7 +65,7 @@ export const SqlSetupModal: React.FC<SqlSetupModalProps> = ({ isOpen, onClose })
                 href="https://supabase.com/dashboard"
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-600 font-medium hover:underline inline-flex items-center"
+                className="text-emerald-600 font-medium hover:underline inline-flex items-center"
               >
                 supabase.com/dashboard
               </a>
@@ -73,7 +73,7 @@ export const SqlSetupModal: React.FC<SqlSetupModalProps> = ({ isOpen, onClose })
             </p>
 
             <h4 className="font-bold text-neutral-800 text-sm flex items-center pt-2">
-              <span className="flex items-center justify-center bg-indigo-100 text-indigo-800 rounded-full h-5 w-5 text-xs mr-2 font-mono">2</span>
+              <span className="flex items-center justify-center bg-emerald-100 text-emerald-800 rounded-full h-5 w-5 text-xs mr-2 font-mono">2</span>
               Paste the SQL Schema & Run
             </h4>
             <p className="text-xs pl-7 text-neutral-500">

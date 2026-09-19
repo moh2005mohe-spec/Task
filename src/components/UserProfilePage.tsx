@@ -96,7 +96,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
       </div>
 
       {/* Main Profile Header Card */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
@@ -108,12 +108,12 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
               <h1 className="text-2xl font-black tracking-tight leading-tight">
                 {user.email.split('@')[0]}
               </h1>
-              <p className="text-sm text-indigo-200 mt-1 flex items-center">
+              <p className="text-sm text-emerald-200 mt-1 flex items-center">
                 <Mail className="h-4 w-4 mr-1.5 shrink-0" />
                 {user.email}
               </p>
               <div className="mt-3 flex items-center space-x-2">
-                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-100 border border-indigo-400/20">
+                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/30 text-emerald-100 border border-emerald-400/20">
                   <Calendar className="h-3.5 w-3.5 mr-1" />
                   Joined {joinedDate}
                 </span>
@@ -122,14 +122,14 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 w-full sm:w-auto min-w-[200px]">
-            <p className="text-xs font-bold text-indigo-200 uppercase tracking-wider">Wallet Balance</p>
+            <p className="text-xs font-bold text-emerald-200 uppercase tracking-wider">Wallet Balance</p>
             <p className="text-3xl font-black font-mono text-white mt-1">${user.balance.toFixed(2)} USD</p>
             {onOpenDeposit && user.role !== 'admin' && (
               <button
                 onClick={onOpenDeposit}
-                className="mt-3 w-full py-2 px-3 bg-white hover:bg-neutral-100 text-indigo-900 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center space-x-1"
+                className="mt-3 w-full py-2 px-3 bg-white hover:bg-neutral-100 text-emerald-900 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center space-x-1"
               >
-                <CreditCard className="h-3.5 w-3.5 text-indigo-600" />
+                <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Deposit Funds</span>
               </button>
             )}
@@ -142,7 +142,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
         {/* User Info Column */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-100 shadow-2xs space-y-4">
           <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider flex items-center">
-            <UserIcon className="h-4 w-4 text-indigo-600 mr-2" />
+            <UserIcon className="h-4 w-4 text-emerald-600 mr-2" />
             Account Details
           </h2>
 
@@ -158,10 +158,10 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
             </div>
 
             {/* KYC Account Verification Card */}
-            <div className="p-4 bg-gradient-to-br from-indigo-50/80 to-neutral-50 rounded-2xl border border-indigo-100 space-y-3">
+            <div className="p-4 bg-gradient-to-br from-emerald-50/80 to-neutral-50 rounded-2xl border border-emerald-100 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider flex items-center">
-                  <ShieldCheck className="h-3.5 w-3.5 text-indigo-600 mr-1" />
+                <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider flex items-center">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 mr-1" />
                   KYC Verification
                 </span>
                 {user.kyc_status === 'approved' ? (
@@ -197,7 +197,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
               {user.kyc_status !== 'approved' && user.kyc_status !== 'pending' && (
                 <button
                   onClick={() => setIsKycModalOpen(true)}
-                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center space-x-1"
+                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center space-x-1"
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
                   <span>Verify Account (KYC)</span>
@@ -216,7 +216,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
 
           {loading ? (
             <div className="py-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-600 border-t-transparent"></div>
               <p className="text-xs text-neutral-400 mt-2 font-medium">Loading user activity data...</p>
             </div>
           ) : (
@@ -230,13 +230,13 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                 <p className="text-xs text-emerald-700/80 font-medium">Successfully approved and paid submissions</p>
               </div>
 
-              <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 space-y-1">
-                <div className="flex items-center justify-between text-indigo-700">
+              <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-1">
+                <div className="flex items-center justify-between text-emerald-700">
                   <span className="text-xs font-bold uppercase tracking-wider">Total Earned</span>
-                  <DollarSign className="h-5 w-5 text-indigo-600" />
+                  <DollarSign className="h-5 w-5 text-emerald-600" />
                 </div>
-                <p className="text-3xl font-black font-mono text-indigo-900">${stats.totalEarned.toFixed(2)}</p>
-                <p className="text-xs text-indigo-700/80 font-medium">Earnings credited to your balance</p>
+                <p className="text-3xl font-black font-mono text-emerald-900">${stats.totalEarned.toFixed(2)}</p>
+                <p className="text-xs text-emerald-700/80 font-medium">Earnings credited to your balance</p>
               </div>
 
               <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-100 space-y-1">
@@ -249,13 +249,13 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
               </div>
 
               {user.role !== 'admin' && (
-                <div className="bg-purple-50/60 p-4 rounded-2xl border border-purple-100 space-y-1">
-                  <div className="flex items-center justify-between text-purple-800">
+                <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-1">
+                  <div className="flex items-center justify-between text-emerald-800">
                     <span className="text-xs font-bold uppercase tracking-wider">Created Campaigns</span>
-                    <PlusCircle className="h-5 w-5 text-purple-600" />
+                    <PlusCircle className="h-5 w-5 text-emerald-600" />
                   </div>
-                  <p className="text-3xl font-black text-purple-900">{stats.campaignsCreated}</p>
-                  <p className="text-xs text-purple-700/80 font-medium">Total budget spent: ${stats.totalSpent.toFixed(2)}</p>
+                  <p className="text-3xl font-black text-emerald-900">{stats.campaignsCreated}</p>
+                  <p className="text-xs text-emerald-700/80 font-medium">Total budget spent: ${stats.totalSpent.toFixed(2)}</p>
                 </div>
               )}
             </div>

@@ -282,7 +282,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
         </div>
         <button
           onClick={onOpenCreateTask}
-          className="inline-flex items-center justify-center px-5 py-3 border border-transparent rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center justify-center px-5 py-3 border border-transparent rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all cursor-pointer whitespace-nowrap"
           id="btn-trigger-create-task"
         >
           <PlusCircle className="h-4.5 w-4.5 mr-2" />
@@ -308,7 +308,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
         {/* Wallet & Cryptomus Deposit Card */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-100 shadow-2xs flex flex-col justify-between space-y-4">
           <div className="flex items-center space-x-3 text-neutral-900">
-            <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600">
+            <div className="bg-emerald-50 p-2.5 rounded-xl text-emerald-600">
               <Wallet className="h-5 w-5" />
             </div>
             <div>
@@ -326,7 +326,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                 setDepositError('');
                 setDepositSuccess('');
               }}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-indigo-100 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-emerald-100 cursor-pointer"
             >
               <CreditCard className="h-4 w-4" />
               <span>Deposit Funds</span>
@@ -345,7 +345,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
               <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Your Campaigns</p>
               <h3 className="text-3xl font-extrabold text-neutral-950 mt-1">{campaigns.length}</h3>
             </div>
-            <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-1 rounded-lg">Total</span>
+            <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-1 rounded-lg">Total</span>
           </div>
           <div className="flex items-center space-x-4 text-xs text-neutral-500 border-t border-neutral-100 pt-3 mt-4">
             <span className="flex items-center">
@@ -374,7 +374,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
               {submissions.filter(s => s.status === 'pending').length} Review Needed
             </span>
             <span className="flex items-center">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 mr-1.5"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
               {submissions.filter(s => s.status === 'approved').length} Approved
             </span>
           </div>
@@ -385,12 +385,12 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
       <div className="bg-white rounded-2xl border border-neutral-100 shadow-2xs overflow-hidden">
         <div className="px-6 py-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
           <h2 className="text-lg font-bold text-neutral-900 flex items-center">
-            <ListTodo className="h-5 w-5 text-indigo-600 mr-2" />
+            <ListTodo className="h-5 w-5 text-emerald-600 mr-2" />
             Your Created Campaigns
           </h2>
           <button
             onClick={loadData}
-            className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer flex items-center space-x-1"
+            className="text-xs text-emerald-600 font-bold hover:underline cursor-pointer flex items-center space-x-1"
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1" />
             <span>Refresh List</span>
@@ -399,12 +399,12 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
 
         {loading ? (
           <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent mb-2"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-600 border-t-transparent mb-2"></div>
             <p className="text-xs text-neutral-500 font-medium">Fetching campaigns...</p>
           </div>
         ) : campaigns.length === 0 ? (
           <div className="p-12 text-center max-w-md mx-auto space-y-3">
-            <div className="bg-indigo-50 rounded-full p-4 w-fit mx-auto text-indigo-600">
+            <div className="bg-emerald-50 rounded-full p-4 w-fit mx-auto text-emerald-600">
               <PlusCircle className="h-8 w-8" />
             </div>
             <h4 className="text-base font-bold text-neutral-800">No campaigns launched yet</h4>
@@ -413,7 +413,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
             </p>
             <button
               onClick={onOpenCreateTask}
-              className="mt-2 inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+              className="mt-2 inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl cursor-pointer"
             >
               Launch First Campaign
             </button>
@@ -439,7 +439,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                       <div>
                         <p className="font-bold text-neutral-800 line-clamp-1">{task.title}</p>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg">
+                          <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg">
                             {task.category}
                           </span>
                           <span className="text-[10px] text-neutral-400 font-medium">
@@ -459,7 +459,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     <td className="px-6 py-4 text-center font-bold font-mono text-neutral-800">
                       {task.workers_needed}
                     </td>
-                    <td className="px-6 py-4 text-right font-bold font-mono text-indigo-600">
+                    <td className="px-6 py-4 text-right font-bold font-mono text-emerald-600">
                       ${task.worker_pay.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 text-right font-bold font-mono text-neutral-800">
@@ -664,7 +664,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div>
@@ -695,7 +695,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                       onClick={() => setDepositAmount(preset)}
                       className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
                         depositAmount === preset
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                           : 'bg-white border-neutral-200 text-neutral-700 hover:border-neutral-300'
                       }`}
                     >
@@ -715,7 +715,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     placeholder="Custom Amount"
-                    className="w-full pl-8 pr-4 py-2.5 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="w-full pl-8 pr-4 py-2.5 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-900 bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -759,7 +759,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                   type="button"
                   onClick={handleInitiateDeposit}
                   disabled={isProcessingPayment}
-                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm flex items-center justify-center space-x-2 transition-all shadow-md shadow-indigo-100 disabled:opacity-60 cursor-pointer"
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm flex items-center justify-center space-x-2 transition-all shadow-md shadow-emerald-100 disabled:opacity-60 cursor-pointer"
                 >
                   {isProcessingPayment ? (
                     <>

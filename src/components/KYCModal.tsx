@@ -115,7 +115,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
 
         {/* Modal Title Header */}
         <div className="flex items-center space-x-3 border-b border-neutral-100 pb-4">
-          <div className="p-3 bg-indigo-50 text-indigo-700 rounded-2xl">
+          <div className="p-3 bg-emerald-50 text-emerald-700 rounded-2xl">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
@@ -137,13 +137,13 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
           {/* Step 1: Country Selection */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider flex items-center">
-              <Globe className="h-4 w-4 text-indigo-600 mr-1.5" />
+              <Globe className="h-4 w-4 text-emerald-600 mr-1.5" />
               1. Select Country of Residence
             </label>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
               {allCountriesList.map((c) => (
                 <option key={c} value={c}>
@@ -180,7 +180,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
                     </div>
                   ) : (
                     <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center space-y-1">
-                      <Camera className="h-6 w-6 text-indigo-600 mb-1" />
+                      <Camera className="h-6 w-6 text-emerald-600 mb-1" />
                       <span className="text-xs font-bold text-neutral-700">Upload Front</span>
                       <span className="text-[10px] text-neutral-400">Front side of card</span>
                       <input
@@ -211,7 +211,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
                     </div>
                   ) : (
                     <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center space-y-1">
-                      <Camera className="h-6 w-6 text-indigo-600 mb-1" />
+                      <Camera className="h-6 w-6 text-emerald-600 mb-1" />
                       <span className="text-xs font-bold text-neutral-700">Upload Back</span>
                       <span className="text-[10px] text-neutral-400">Back side of card</span>
                       <input
@@ -242,7 +242,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
                     </div>
                   ) : (
                     <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center space-y-1">
-                      <Camera className="h-6 w-6 text-indigo-600 mb-1" />
+                      <Camera className="h-6 w-6 text-emerald-600 mb-1" />
                       <span className="text-xs font-bold text-neutral-700">Selfie holding ID</span>
                       <span className="text-[10px] text-neutral-400">Photo with card</span>
                       <input
@@ -269,7 +269,7 @@ export const KYCModal: React.FC<KYCModalProps> = ({ isOpen, onClose, user, onSuc
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+              className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md flex items-center space-x-2 cursor-pointer disabled:opacity-50"
             >
               {submitting ? (
                 <span>Submitting...</span>

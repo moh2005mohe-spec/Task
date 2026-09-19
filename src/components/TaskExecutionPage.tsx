@@ -118,7 +118,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
           Back to Available Tasks
         </button>
 
-        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
+        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
           Task Execution Mode
         </span>
       </div>
@@ -144,7 +144,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-neutral-100 pb-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100">
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100">
                 {task.category}
               </span>
               <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-600 flex items-center">
@@ -185,7 +185,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
         {/* Step-by-Step Task Instructions */}
         <div className="space-y-3 pt-2">
           <h2 className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center">
-            <ListChecks className="h-4 w-4 text-indigo-600 mr-2" />
+            <ListChecks className="h-4 w-4 text-emerald-600 mr-2" />
             Task Instructions & Requirements
           </h2>
 
@@ -197,16 +197,16 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
         {/* Required Proof Format */}
         <div className="space-y-3">
           <h2 className="text-xs font-bold text-neutral-900 uppercase tracking-wider flex items-center">
-            <ShieldCheck className="h-4 w-4 text-indigo-600 mr-2" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600 mr-2" />
             Required Proof Format
           </h2>
 
-          <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 text-xs text-indigo-900 space-y-1">
-            <p className="font-bold text-indigo-950 flex items-center">
-              <FileText className="h-4 w-4 mr-1.5 text-indigo-600" />
+          <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 text-xs text-emerald-900 space-y-1">
+            <p className="font-bold text-emerald-950 flex items-center">
+              <FileText className="h-4 w-4 mr-1.5 text-emerald-600" />
               Proof Instructions from Advertiser:
             </p>
-            <p className="font-medium text-indigo-800 leading-relaxed pl-5">
+            <p className="font-medium text-emerald-800 leading-relaxed pl-5">
               {task.require_proof
                 ? 'Written proof (ID, Username, or URL) and optional screenshot attachment required.'
                 : 'Provide text confirmation of completed task.'}
@@ -218,7 +218,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
       {/* Submission Form Card */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-100 shadow-sm space-y-6">
         <h2 className="text-base font-extrabold text-neutral-900 flex items-center">
-          <Send className="h-5 w-5 text-indigo-600 mr-2.5" />
+          <Send className="h-5 w-5 text-emerald-600 mr-2.5" />
           Submit Task Completion Proof
         </h2>
 
@@ -260,7 +260,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
               value={proofText}
               onChange={(e) => setProofText(e.target.value)}
               placeholder="Enter your username, transaction ID, email, or details as requested in task instructions..."
-              className="w-full px-4 py-3 border border-neutral-200 rounded-2xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-neutral-50/50"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-2xl text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-neutral-50/50"
             />
           </div>
 
@@ -287,11 +287,11 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-neutral-200 hover:border-indigo-400 rounded-2xl bg-neutral-50 hover:bg-indigo-50/20 transition-all cursor-pointer group">
-                <div className="p-3 bg-white rounded-2xl shadow-2xs group-hover:scale-110 transition-transform text-indigo-600 mb-2">
+              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-neutral-200 hover:border-emerald-400 rounded-2xl bg-neutral-50 hover:bg-emerald-50/20 transition-all cursor-pointer group">
+                <div className="p-3 bg-white rounded-2xl shadow-2xs group-hover:scale-110 transition-transform text-emerald-600 mb-2">
                   <Upload className="h-6 w-6" />
                 </div>
-                <span className="text-xs font-bold text-neutral-700 group-hover:text-indigo-600">
+                <span className="text-xs font-bold text-neutral-700 group-hover:text-emerald-600">
                   Click to upload proof screenshot
                 </span>
                 <span className="text-[10px] text-neutral-400 font-medium mt-1">
@@ -322,7 +322,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
               className={`flex-1 py-3 px-6 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center space-x-2 ${
                 user.kyc_status !== 'approved'
                   ? 'bg-neutral-400 cursor-not-allowed opacity-60'
-                  : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-md shadow-indigo-100 disabled:opacity-50'
+                  : 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer shadow-md shadow-emerald-100 disabled:opacity-50'
               }`}
             >
               {user.kyc_status !== 'approved' ? (

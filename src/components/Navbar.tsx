@@ -73,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       case 'submission_revision':
         return <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />;
       default:
-        return <Bell className="h-4 w-4 text-indigo-600 shrink-0" />;
+        return <Bell className="h-4 w-4 text-emerald-600 shrink-0" />;
     }
   };
 
@@ -141,10 +141,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl border border-neutral-200 shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                   <div className="p-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/80">
                     <div className="flex items-center space-x-2">
-                      <Bell className="h-4 w-4 text-indigo-600" />
+                      <Bell className="h-4 w-4 text-emerald-600" />
                       <h3 className="text-xs font-extrabold text-neutral-900 uppercase tracking-wider">Notifications</h3>
                       {unreadCount > 0 && (
-                        <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                           {unreadCount} New
                         </span>
                       )}
@@ -153,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {unreadCount > 0 && (
                         <button
                           onClick={handleMarkAllRead}
-                          className="text-[10px] font-bold text-indigo-600 hover:underline px-2 py-1 cursor-pointer"
+                          className="text-[10px] font-bold text-emerald-600 hover:underline px-2 py-1 cursor-pointer"
                         >
                           Mark all as read
                         </button>
@@ -180,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           key={n.id}
                           onClick={() => handleNotifClick(n)}
                           className={`p-3.5 transition-colors flex items-start space-x-3 cursor-pointer ${
-                            !n.read ? 'bg-indigo-50/50 font-medium hover:bg-indigo-50/80' : 'hover:bg-neutral-50/80'
+                            !n.read ? 'bg-emerald-50/50 font-medium hover:bg-emerald-50/80' : 'hover:bg-neutral-50/80'
                           }`}
                         >
                           <div className="mt-0.5 p-1.5 rounded-lg bg-white border border-neutral-100 shadow-2xs">
@@ -238,7 +238,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         : 'text-neutral-600 hover:text-neutral-900'
                     }`}
                   >
-                    <PlusCircle className="h-3.5 w-3.5 text-indigo-500" />
+                    <PlusCircle className="h-3.5 w-3.5 text-emerald-500" />
                     <span>Advertiser</span>
                   </button>
                 </>
@@ -252,11 +252,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="View Profile & Stats"
                 className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-neutral-100 transition-all cursor-pointer group text-left"
               >
-                <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-2xs group-hover:scale-105 transition-transform">
+                <div className="h-8 w-8 rounded-xl bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-2xs group-hover:scale-105 transition-transform">
                   {user.email.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden sm:flex flex-col">
-                  <span className="text-xs font-bold text-neutral-800 truncate max-w-[110px] group-hover:text-indigo-600 transition-colors">
+                  <span className="text-xs font-bold text-neutral-800 truncate max-w-[110px] group-hover:text-emerald-600 transition-colors">
                     {user.email.split('@')[0]}
                   </span>
                   <span className="text-[10px] text-neutral-400 font-medium capitalize">
@@ -282,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {selectedNotif && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in" id="notif-modal-overlay">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-neutral-100 animate-slide-up">
-            <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-indigo-50/80">
+            <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-emerald-50/80">
               <div className="flex items-center space-x-3">
                 <div className="bg-white p-2 rounded-xl shadow-2xs border border-neutral-100">
                   {getNotifIcon(selectedNotif.type)}
@@ -314,7 +314,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setSelectedNotif(null);
                       onChangeRole('worker');
                     }}
-                    className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-indigo-100"
+                    className="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-emerald-100"
                   >
                     <span>View My Tasks & Submissions</span>
                     <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
@@ -325,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setSelectedNotif(null);
                       onChangeRole('advertiser');
                     }}
-                    className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-indigo-100"
+                    className="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-emerald-100"
                   >
                     <span>Go to Advertiser Dashboard</span>
                     <ArrowRight className="h-3.5 w-3.5 ml-1.5" />

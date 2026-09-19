@@ -290,7 +290,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             onClick={() => setActiveTab('jobs')}
             className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
               activeTab === 'jobs'
-                ? 'bg-white text-indigo-700 shadow-xs'
+                ? 'bg-white text-emerald-700 shadow-xs'
                 : 'text-neutral-600 hover:text-neutral-900'
             }`}
           >
@@ -302,7 +302,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             onClick={() => setActiveTab('submissions')}
             className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
               activeTab === 'submissions'
-                ? 'bg-white text-indigo-700 shadow-xs'
+                ? 'bg-white text-emerald-700 shadow-xs'
                 : 'text-neutral-600 hover:text-neutral-900'
             }`}
           >
@@ -466,7 +466,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-100 pb-4">
               <div>
                 <h2 className="text-lg font-bold text-neutral-900 flex items-center">
-                  <FileCheck className="h-5 w-5 text-indigo-600 mr-2" />
+                  <FileCheck className="h-5 w-5 text-emerald-600 mr-2" />
                   My Executed Tasks & Status
                 </h2>
                 <p className="text-xs text-neutral-500 mt-1">
@@ -474,7 +474,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                 </p>
               </div>
 
-              <div className="text-xs font-semibold bg-indigo-50 text-indigo-800 px-3 py-1.5 rounded-xl border border-indigo-100/60 w-fit">
+              <div className="text-xs font-semibold bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-100/60 w-fit">
                 3-Day Auto-Payout Protection Active
               </div>
             </div>
@@ -490,7 +490,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                 </p>
                 <button
                   onClick={() => setActiveTab('jobs')}
-                  className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer"
                 >
                   Browse Available Tasks
                 </button>
@@ -620,12 +620,12 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in" id="submission-modal-overlay">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col border border-neutral-100 animate-slide-up" id="submission-modal">
             {/* Modal Header */}
-            <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-indigo-50">
+            <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-emerald-50">
               <div className="flex items-center space-x-2.5">
-                <Briefcase className="h-5 w-5 text-indigo-600" />
+                <Briefcase className="h-5 w-5 text-emerald-600" />
                 <div>
                   <h3 className="text-sm font-extrabold text-neutral-900">Submit Work Proof</h3>
-                  <p className="text-[10px] text-indigo-700 font-medium">Provide details to advertisers for validation</p>
+                  <p className="text-[10px] text-emerald-700 font-medium">Provide details to advertisers for validation</p>
                 </div>
               </div>
               <button
@@ -744,7 +744,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                 <button
                   type="submit"
                   disabled={submittingProof}
-                  className="flex-1 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-md shadow-indigo-100 disabled:opacity-50"
+                  className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-md shadow-emerald-100 disabled:opacity-50"
                 >
                   {submittingProof ? (
                     <span className="border-2 border-white border-t-transparent rounded-full h-3.5 w-3.5 animate-spin"></span>
@@ -792,7 +792,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                     setKycWarningModal({ open: false, message: '' });
                     setIsKycModalOpen(true);
                   }}
-                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
                   <span>Start KYC Verification</span>

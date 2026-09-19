@@ -251,7 +251,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Subscribe to my YouTube channel and drop a comment"
-                  className="block w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-neutral-50/50"
+                  className="block w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-neutral-50/50"
                 />
                 <p className="text-[11px] text-neutral-400 mt-1.5 font-medium">Use a concise and clear instruction title that summary what needs to be done.</p>
               </div>
@@ -259,7 +259,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
               {/* Step 1: Target Zones */}
               <div className="border-t border-neutral-100 pt-5">
                 <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-3 flex items-center">
-                  <Globe className="h-4 w-4 text-indigo-500 mr-1.5" />
+                  <Globe className="h-4 w-4 text-emerald-500 mr-1.5" />
                   Target Zone & Countries
                 </label>
                 
@@ -271,7 +271,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                       onClick={() => handleZoneChange(zone.id)}
                       className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden flex flex-col justify-between cursor-pointer ${
                         selectedZoneId === zone.id
-                          ? 'border-indigo-600 bg-indigo-50/20 ring-2 ring-indigo-600/10'
+                          ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/10'
                           : 'border-neutral-200 hover:border-neutral-300'
                       }`}
                     >
@@ -279,7 +279,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                         <p className="font-bold text-xs text-neutral-900">{zone.name.split(' (')[0]}</p>
                         <p className="text-[10px] text-neutral-400 mt-0.5">{zone.name.includes('(') ? zone.name.substring(zone.name.indexOf('(')) : ''}</p>
                       </div>
-                      <span className="inline-flex mt-2.5 items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 w-fit">
+                      <span className="inline-flex mt-2.5 items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 w-fit">
                         Min Pay: ${zone.minPrice.toFixed(2)} / task
                       </span>
                     </button>
@@ -296,7 +296,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                         onClick={handleToggleAll}
                         className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
                           isAllSelected
-                            ? 'bg-indigo-600 text-white border-transparent'
+                            ? 'bg-emerald-600 text-white border-transparent'
                             : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
                         }`}
                       >
@@ -314,7 +314,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                             onClick={() => handleToggleCountry(country)}
                             className={`p-2 rounded-lg border text-left text-[10px] font-medium transition-all cursor-pointer truncate ${
                               isSelected
-                                ? 'bg-indigo-50 border-indigo-500 text-indigo-900'
+                                ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
                                 : 'bg-white border-neutral-200 hover:border-neutral-300 text-neutral-600'
                             }`}
                           >
@@ -331,7 +331,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
               {/* Step 2: Task Category */}
               <div className="border-t border-neutral-100 pt-5">
                 <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-3 flex items-center">
-                  <ClipboardList className="h-4 w-4 text-indigo-500 mr-1.5" />
+                  <ClipboardList className="h-4 w-4 text-emerald-500 mr-1.5" />
                   Task Category
                 </label>
 
@@ -343,12 +343,12 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                       onClick={() => setSelectedCategoryId(category.id)}
                       className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
                         selectedCategoryId === category.id
-                          ? 'border-indigo-600 bg-indigo-50/20 ring-1 ring-indigo-600/50'
+                          ? 'border-emerald-600 bg-emerald-50/20 ring-1 ring-emerald-600/50'
                           : 'border-neutral-200 hover:border-neutral-300'
                       }`}
                     >
                       <span className="font-bold text-xs text-neutral-800 truncate max-w-[170px]">{category.name}</span>
-                      <span className="text-xs font-bold font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                      <span className="text-xs font-bold font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
                         ${category.minPrice.toFixed(2)}
                       </span>
                     </button>
@@ -366,7 +366,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className="block w-full px-3 py-2.5 border border-neutral-200 rounded-xl text-sm bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="block w-full px-3 py-2.5 border border-neutral-200 rounded-xl text-sm bg-neutral-50/50 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                   >
                     <option>24 Hours</option>
                     <option>3 Days</option>
@@ -392,10 +392,10 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                       required
                       value={workerPay}
                       onChange={(e) => setWorkerPay(parseFloat(e.target.value) || 0)}
-                      className="block w-full pl-7 pr-3 py-2.5 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-neutral-50/50 font-mono"
+                      className="block w-full pl-7 pr-3 py-2.5 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-neutral-50/50 font-mono"
                     />
                   </div>
-                  <p className="text-[10px] text-indigo-600 mt-1.5 font-bold">Min required: ${minPayRequired.toFixed(2)}</p>
+                  <p className="text-[10px] text-emerald-600 mt-1.5 font-bold">Min required: ${minPayRequired.toFixed(2)}</p>
                 </div>
 
                 {/* Workers needed */}
@@ -409,7 +409,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                     required
                     value={workersNeeded}
                     onChange={(e) => setWorkersNeeded(Math.max(20, parseInt(e.target.value) || 20))}
-                    className="block w-full px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-neutral-50/50 font-mono"
+                    className="block w-full px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-neutral-50/50 font-mono"
                   />
                   <p className="text-[10px] text-rose-500 mt-1.5 font-bold">Minimum 20 (Fixed constraint)</p>
                 </div>
@@ -427,12 +427,12 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
                     placeholder="Provide step-by-step instructions for the worker to complete. For example:&#10;1. Visit the YouTube link: www.youtube.com/...&#10;2. Subscribe to the channel.&#10;3. Submit screenshot showing your subscription."
-                    className="block w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-neutral-50/50 leading-relaxed"
+                    className="block w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-neutral-50/50 leading-relaxed"
                   />
                 </div>
 
                 {/* Require Screenshot Switcher */}
-                <div className="bg-indigo-50/30 rounded-xl p-4 border border-indigo-100 flex items-center justify-between">
+                <div className="bg-emerald-50/30 rounded-xl p-4 border border-emerald-100 flex items-center justify-between">
                   <div className="pr-4">
                     <p className="text-xs font-bold text-neutral-800">Require Screenshot Confirmation Proof</p>
                     <p className="text-[11px] text-neutral-500 mt-0.5">When toggled ON, workers will have the ability to upload an image or screenshot confirming task completion.</p>
@@ -440,8 +440,8 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                   <button
                     type="button"
                     onClick={() => setRequireProof(!requireProof)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                      requireProof ? 'bg-indigo-600' : 'bg-neutral-200'
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                      requireProof ? 'bg-emerald-600' : 'bg-neutral-200'
                     }`}
                   >
                     <span className="sr-only">Require screenshot proof</span>
@@ -463,7 +463,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
                   className={`w-full py-3 px-4 border border-transparent rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center space-x-2 ${
                     user.kyc_status !== 'approved'
                       ? 'bg-neutral-400 cursor-not-allowed opacity-75'
-                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
                   }`}
                   id="btn-submit-campaign"
                 >
@@ -490,7 +490,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 space-y-6 sticky top-24">
             <h3 className="text-lg font-bold text-neutral-900 flex items-center">
-              <Calculator className="h-5 w-5 text-indigo-600 mr-2" />
+              <Calculator className="h-5 w-5 text-emerald-600 mr-2" />
               Campaign Cost Estimator
             </h3>
 
@@ -523,7 +523,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-500 font-medium">Payout Rate</span>
-                <span className="font-bold text-indigo-600 font-mono">${workerPay.toFixed(2)} each</span>
+                <span className="font-bold text-emerald-600 font-mono">${workerPay.toFixed(2)} each</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-neutral-500 font-medium">Campaign Subtotal</span>
@@ -541,10 +541,10 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
 
               <hr className="border-neutral-100 my-4" />
 
-              <div className="flex justify-between items-center bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50">
+              <div className="flex justify-between items-center bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50">
                 <span className="text-sm font-bold text-neutral-800">Total Campaign Cost</span>
                 <div className="text-right">
-                  <span className="text-xl font-black text-indigo-700 font-mono">${totalCost.toFixed(2)}</span>
+                  <span className="text-xl font-black text-emerald-700 font-mono">${totalCost.toFixed(2)}</span>
                   <p className="text-[10px] text-neutral-400 mt-0.5">Deducted immediately</p>
                 </div>
               </div>

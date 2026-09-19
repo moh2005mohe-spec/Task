@@ -271,7 +271,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-neutral-50 px-4">
         <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-neutral-100 shadow-xl space-y-6">
           <div className="text-center space-y-2">
-            <div className="mx-auto h-14 w-14 bg-indigo-100 text-indigo-700 rounded-2xl flex items-center justify-center mb-4">
+            <div className="mx-auto h-14 w-14 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mb-4">
               <Shield className="h-7 w-7" />
             </div>
             <h2 className="text-xl font-extrabold text-neutral-900 tracking-tight">Unlock Administrator Control</h2>
@@ -300,7 +300,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password (Hint: admin123)"
-                  className="block w-full pl-9 pr-3 py-3 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-neutral-50/50"
+                  className="block w-full pl-9 pr-3 py-3 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-neutral-50/50"
                 />
               </div>
             </div>
@@ -327,7 +327,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs">
         <div>
           <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight flex items-center">
-            <Shield className="h-6 w-6 text-indigo-600 mr-2.5" />
+            <Shield className="h-6 w-6 text-emerald-600 mr-2.5" />
             Administrator Workspace
           </h1>
           <p className="text-xs text-neutral-500 mt-1">
@@ -360,7 +360,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('campaigns')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'campaigns' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'campaigns' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <Layers className="h-4 w-4" />
@@ -370,7 +370,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('kyc')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'kyc' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'kyc' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <UserCheck className="h-4 w-4" />
@@ -380,7 +380,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('users')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'users' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'users' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -390,7 +390,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('pricing')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'pricing' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'pricing' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <Sliders className="h-4 w-4" />
@@ -400,7 +400,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('notifications')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'notifications' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'notifications' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <Bell className="h-4 w-4" />
@@ -410,7 +410,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
         <button
           onClick={() => setActiveTab('sql')}
           className={`pb-3 text-xs sm:text-sm font-bold flex items-center space-x-2 relative cursor-pointer ${
-            activeTab === 'sql' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-neutral-500 hover:text-neutral-900'
+            activeTab === 'sql' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-neutral-500 hover:text-neutral-900'
           }`}
         >
           <FileText className="h-4 w-4" />
@@ -432,7 +432,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
           {loading ? (
             <div className="bg-white p-12 rounded-3xl border border-neutral-100 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-emerald-600 border-t-transparent"></div>
               <p className="text-xs text-neutral-400 mt-2">Loading pending campaigns...</p>
             </div>
           ) : pendingCampaigns.length === 0 ? (
@@ -446,11 +446,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
               {pendingCampaigns.map((task) => (
                 <div
                   key={task.id}
-                  className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4 hover:border-indigo-100 transition-all"
+                  className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4 hover:border-emerald-100 transition-all"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-3">
                     <div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100 mb-1">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 mb-1">
                         {task.category}
                       </span>
                       <h3 className="text-base font-extrabold text-neutral-900">{task.title}</h3>
@@ -461,7 +461,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
                     <div className="text-left sm:text-right">
                       <p className="text-xs text-neutral-400 uppercase font-bold">Total Budget</p>
-                      <p className="text-xl font-black font-mono text-indigo-900">${task.total_cost.toFixed(2)} USD</p>
+                      <p className="text-xl font-black font-mono text-emerald-900">${task.total_cost.toFixed(2)} USD</p>
                       <p className="text-[11px] text-neutral-500">
                         {task.workers_needed} workers @ ${task.worker_pay.toFixed(2)} pay
                       </p>
@@ -528,7 +528,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
           {loading ? (
             <div className="bg-white p-12 rounded-3xl border border-neutral-100 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-emerald-600 border-t-transparent"></div>
               <p className="text-xs text-neutral-400 mt-2">Loading KYC verifications...</p>
             </div>
           ) : pendingKYCs.length === 0 ? (
@@ -548,7 +548,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                     <div>
                       <h3 className="text-base font-extrabold text-neutral-900">{kyc.user_email}</h3>
                       <p className="text-xs text-neutral-500 mt-0.5 flex items-center">
-                        <Globe className="h-3.5 w-3.5 mr-1 text-indigo-600" />
+                        <Globe className="h-3.5 w-3.5 mr-1 text-emerald-600" />
                         Selected Country: <strong className="text-neutral-800 ml-1">{kyc.country}</strong>
                       </p>
                     </div>
@@ -641,7 +641,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                 value={userSearchQuery}
                 onChange={(e) => setUserSearchQuery(e.target.value)}
                 placeholder="Search user by email or country..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-2xs"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-2xs"
               />
               {userSearchQuery && (
                 <button
@@ -710,7 +710,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                             </span>
                           )}
                         </td>
-                        <td className="p-4 font-mono font-black text-indigo-900 text-sm">
+                        <td className="p-4 font-mono font-black text-emerald-900 text-sm">
                           ${u.balance.toFixed(2)} USD
                         </td>
                         <td className="p-4 text-right space-x-2">
@@ -756,7 +756,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-neutral-100 shadow-2xs space-y-6">
             <div>
               <h2 className="text-base font-extrabold text-neutral-900 flex items-center">
-                <Bell className="h-5 w-5 mr-2 text-indigo-600" />
+                <Bell className="h-5 w-5 mr-2 text-emerald-600" />
                 Send Broadcast Notification to All Users
               </h2>
               <p className="text-xs text-neutral-500 mt-1">
@@ -784,7 +784,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                   value={broadcastTitle}
                   onChange={(e) => setBroadcastTitle(e.target.value)}
                   placeholder="e.g. Important Platform Update & Bonus Reward"
-                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
@@ -798,14 +798,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                   value={broadcastMessage}
                   onChange={(e) => setBroadcastMessage(e.target.value)}
                   placeholder="Write your announcement message here..."
-                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full px-4 py-3 bg-neutral-50/50 border border-neutral-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 ></textarea>
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
+                  className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2"
                 >
                   <Bell className="h-4 w-4" />
                   <span>Send Broadcast to All Users</span>
@@ -830,7 +830,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
             </div>
             <button
               onClick={handleSavePricing}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
             >
               Save Pricing Settings
             </button>
@@ -847,7 +847,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
             {/* Zones Pricing */}
             <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4">
               <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center">
-                <Globe className="h-4 w-4 text-indigo-600 mr-1.5" />
+                <Globe className="h-4 w-4 text-emerald-600 mr-1.5" />
                 Zone Minimum Rates
               </h3>
               <div className="space-y-3">
@@ -870,7 +870,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                           updated[idx].minPrice = val;
                           setZones(updated);
                         }}
-                        className="w-20 p-2 bg-white border border-neutral-200 rounded-xl text-xs font-mono font-bold text-indigo-900 text-right"
+                        className="w-20 p-2 bg-white border border-neutral-200 rounded-xl text-xs font-mono font-bold text-emerald-900 text-right"
                       />
                     </div>
                   </div>
@@ -881,7 +881,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
             {/* Category Pricing */}
             <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-2xs space-y-4">
               <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center">
-                <Tag className="h-4 w-4 text-indigo-600 mr-1.5" />
+                <Tag className="h-4 w-4 text-emerald-600 mr-1.5" />
                 Category Minimum Rates
               </h3>
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -903,7 +903,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                           updated[idx].minPrice = val;
                           setCategories(updated);
                         }}
-                        className="w-20 p-2 bg-white border border-neutral-200 rounded-xl text-xs font-mono font-bold text-indigo-900 text-right"
+                        className="w-20 p-2 bg-white border border-neutral-200 rounded-xl text-xs font-mono font-bold text-emerald-900 text-right"
                       />
                     </div>
                   </div>
@@ -927,7 +927,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                 setCopiedSql(true);
                 setTimeout(() => setCopiedSql(false), 3000);
               }}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center space-x-1"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center space-x-1"
             >
               <Copy className="h-4 w-4 mr-1" />
               <span>{copiedSql ? 'Copied to Clipboard!' : 'Copy SQL Script'}</span>
@@ -962,7 +962,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                 value={kycRejectionReason}
                 onChange={(e) => setKycRejectionReason(e.target.value)}
                 placeholder="Reason (e.g., Images were blurry or ID card expired...)"
-                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
 
               <div className="flex justify-end gap-3">
@@ -1023,7 +1023,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
                 step="0.01"
                 value={newBalanceInput}
                 onChange={(e) => setNewBalanceInput(parseFloat(e.target.value) || 0)}
-                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-mono font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
 
@@ -1036,7 +1036,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
               </button>
               <button
                 onClick={handleSaveBalance}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md"
               >
                 Save Balance
               </button>
