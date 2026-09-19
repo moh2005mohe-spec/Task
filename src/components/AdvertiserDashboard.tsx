@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
 import { getTasks, getSubmissions, updateSubmissionStatus, deleteTaskAndRefund, updateUserBalance } from '../lib/supabase';
-import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2, Trash2, RefreshCw, AlertCircle, MessageSquare } from 'lucide-react';
+import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2, Trash2, RefreshCw, AlertCircle, MessageSquare, ShieldAlert } from 'lucide-react';
 
 interface AdvertiserDashboardProps {
   user: User;
@@ -289,6 +289,18 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
           Create New Campaign
         </button>
       </div>
+
+      {user.kyc_status !== 'approved' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5" id="advertiser-kyc-alert">
+          <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1">
+            <h4 className="font-bold text-amber-950 text-sm">KYC Identity Verification Required</h4>
+            <p className="text-amber-800">
+              Your account must be verified with an approved KYC application before you can launch campaigns or advertise to workers. Go to your Profile to submit your identity documents.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Grid: Balance booster and Quick Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

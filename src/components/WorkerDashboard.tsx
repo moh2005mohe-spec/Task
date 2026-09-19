@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission, CATEGORIES } from '../types';
 import { getTasks, saveSubmission, getSubmissions } from '../lib/supabase';
-import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
+import { CONTINENTS, getContinentForCountry } from '../data/countries';
+import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight, ShieldCheck, Globe, ShieldAlert, MapPin } from 'lucide-react';
 import { KYCModal } from './KYCModal';
 
 interface WorkerDashboardProps {
@@ -87,6 +88,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     if (!selectedTask) return;
     setModalError('');
 
+    if (user.kyc_status !== 'approved') {
+      setModalError('You must be verified via KYC before submitting or executing any task.');
+      return;
+    }
+
     if (!proofText.trim()) {
       setModalError('Please enter written proof of completion details.');
       return;
@@ -148,11 +154,57 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     }
   };
 
-  // Filter out tasks that the worker has already submitted so they disappear from Available Tasks
+  // Strict Geo-Targeting based on KYC Country
+  // If worker is KYC-verified, we resolve their country and continent to strictly show matching tasks.
+  // This bypasses any VPN spoofing because it uses the verified KYC country from their profile.
+  const workerKycCountry = (user.kyc_country || '').trim().toLowerCase();
+  const workerContinent = workerKycCountry ? getContinentForCountry(user.kyc_country || '') : null;
+
+  // Filter out tasks that the worker has already submitted
   const unsubmittedTasks = tasks.filter((task) => !hasSubmitted(task.id));
 
+  // Geo-filter tasks:
+  // If the user has an approved KYC with a country, only show tasks targeting their country or continent.
+  const geoFilteredTasks = unsubmittedTasks.filter((task) => {
+    // If worker has no approved KYC or no verified country recorded, they cannot see targeted jobs
+    if (user.kyc_status !== 'approved' || !workerKycCountry) {
+      return true; // will show prompt banner to complete KYC
+    }
+
+    const taskZone = (task.zone || '').toLowerCase();
+    const taskCountries = (task.countries || []).map(c => c.toLowerCase());
+
+    // 1. If task is Global / International (or targeting All countries), it is available
+    if (taskZone.includes('international') || taskZone.includes('global') || taskZone.includes('all')) {
+      return true;
+    }
+
+    // 2. Check if the task countries list explicitly includes the user's verified country
+    const matchesCountry = taskCountries.some(c => 
+      c === workerKycCountry || workerKycCountry.includes(c) || c.includes(workerKycCountry)
+    );
+    if (matchesCountry) {
+      return true;
+    }
+
+    // 3. Check if the task zone or countries match the user's continent
+    if (workerContinent) {
+      const continentLower = workerContinent.toLowerCase();
+      if (taskZone.includes(continentLower)) {
+        // If task has no specific countries, or includes countries in this continent
+        if (taskCountries.length === 0) return true;
+        // Or if any country in the continent matches
+        const continentCountries = (CONTINENTS[workerContinent] || []).map(c => c.toLowerCase());
+        const targetsContinentCountries = taskCountries.some(tc => continentCountries.includes(tc));
+        if (targetsContinentCountries && matchesCountry) return true;
+      }
+    }
+
+    return false;
+  });
+
   // Filter available tasks by selected category
-  const filteredTasks = unsubmittedTasks.filter((task) => {
+  const filteredTasks = geoFilteredTasks.filter((task) => {
     if (selectedCategory === 'All') return true;
     return task.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
            selectedCategory.toLowerCase().includes(task.category.toLowerCase());
@@ -196,6 +248,41 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
           <span>Wallet Balance: ${user.balance.toFixed(2)} USD</span>
         </div>
       </div>
+
+      {/* KYC Status & Strict Geo-Targeting Banner */}
+      {user.kyc_status !== 'approved' ? (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" id="worker-kyc-guard-banner">
+          <div className="flex items-start space-x-3.5">
+            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <h4 className="font-bold text-amber-950 text-sm">KYC Identity Verification Required to Execute Tasks</h4>
+              <p className="text-amber-800 leading-relaxed">
+                To protect our platform and advertisers against multi-accounting and VPN location spoofing, all workers must complete KYC verification. Once verified, tasks will be strictly targeted to your official registered country.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsKycModalOpen(true)}
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+          >
+            <ShieldCheck className="h-4 w-4 mr-1.5" />
+            <span>Verify KYC Now</span>
+          </button>
+        </div>
+      ) : (
+        <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between gap-4 text-xs" id="worker-geo-status-banner">
+          <div className="flex items-center space-x-2.5 text-indigo-950">
+            <MapPin className="h-4 w-4 text-indigo-600 shrink-0" />
+            <span>
+              <strong>Strict KYC Geo-Targeting Active:</strong> Verified for <strong>{user.kyc_country || 'Global'}</strong> ({workerContinent || 'Worldwide'}). You are strictly seeing tasks targeted for your verified location.
+            </span>
+          </div>
+          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+            KYC Verified
+          </span>
+        </div>
+      )}
 
       {/* Main Tab Navigation */}
       <div className="flex items-center justify-between border-b border-neutral-200 pb-2">

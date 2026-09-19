@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Task, User, ZONES as DEFAULT_ZONES, CATEGORIES as DEFAULT_CATEGORIES, ZoneConfig, CategoryConfig } from '../types';
 import { CONTINENTS } from '../data/countries';
 import { saveTask, updateUserBalance, getPricingSettings } from '../lib/supabase';
-import { ChevronLeft, Info, Calculator, ShieldCheck, Globe, ClipboardList } from 'lucide-react';
+import { ChevronLeft, Info, Calculator, ShieldCheck, Globe, ClipboardList, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 interface CreateTaskProps {
   user: User;
@@ -116,6 +116,11 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
     e.preventDefault();
     setError('');
 
+    if (user.kyc_status !== 'approved') {
+      setError('KYC Identity Verification is required to create and launch campaigns. Please verify your account in your Profile first.');
+      return;
+    }
+
     if (!title.trim()) {
       setError('Please enter a descriptive campaign title.');
       return;
@@ -144,11 +149,21 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
     setSubmitting(true);
 
     try {
+      // If user selected a specific zone (continent) but left individual countries unselected, target all countries in that continent
+      let targetCountries = [...selectedCountries];
+      if (targetCountries.length === 0) {
+        if (currentZone.continent === 'All') {
+          targetCountries = Object.values(CONTINENTS).flat();
+        } else if (CONTINENTS[currentZone.continent]) {
+          targetCountries = [...CONTINENTS[currentZone.continent]];
+        }
+      }
+
       const newTask: Task = {
         id: 'task-' + Math.random().toString(36).substr(2, 9),
         title: title.trim(),
         zone: currentZone.name,
-        countries: selectedCountries,
+        countries: targetCountries,
         category: currentCategory.name,
         duration: duration,
         workers_needed: workersNeeded,
@@ -201,6 +216,21 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
               <h2 className="text-2xl font-extrabold text-neutral-900 tracking-tight">Create New Micro-Task Campaign</h2>
               <p className="text-xs text-neutral-500 mt-1">Fill out the requirements below to launch a reviewing campaign for our worker community.</p>
             </div>
+
+            {user.kyc_status !== 'approved' && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 flex items-start space-x-3" id="kyc-warning-banner">
+                <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs space-y-1">
+                  <p className="font-bold text-amber-950">Identity Verification (KYC) Required</p>
+                  <p className="text-amber-800">
+                    To comply with security and prevent fraudulent activities, all advertisers must have an approved KYC verification before publishing campaigns. Please complete your KYC verification in your Profile.
+                  </p>
+                  <p className="text-[11px] font-semibold text-amber-900 pt-0.5">
+                    Current Status: <span className="uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">{user.kyc_status || 'unverified'}</span>
+                  </p>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-xl p-4 flex items-start space-x-2.5">
@@ -429,12 +459,21 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
               <div className="border-t border-neutral-100 pt-6">
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full py-3 px-4 border border-transparent rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                  disabled={submitting || user.kyc_status !== 'approved'}
+                  className={`w-full py-3 px-4 border border-transparent rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center space-x-2 ${
+                    user.kyc_status !== 'approved'
+                      ? 'bg-neutral-400 cursor-not-allowed opacity-75'
+                      : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                  }`}
                   id="btn-submit-campaign"
                 >
                   {submitting ? (
                     <span className="border-2 border-white border-t-transparent rounded-full h-4 w-4 animate-spin"></span>
+                  ) : user.kyc_status !== 'approved' ? (
+                    <>
+                      <ShieldAlert className="h-4 w-4 text-white" />
+                      <span>KYC Verification Required to Launch Campaign</span>
+                    </>
                   ) : (
                     <>
                       <ShieldCheck className="h-4 w-4" />

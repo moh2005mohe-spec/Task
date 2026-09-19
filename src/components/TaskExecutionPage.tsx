@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
 import { saveSubmission, getSubmissions } from '../lib/supabase';
-import { ArrowLeft, Clock, DollarSign, Globe, FileText, Upload, CheckCircle2, AlertCircle, ImageIcon, X, Send, ShieldCheck, ListChecks } from 'lucide-react';
+import { ArrowLeft, Clock, DollarSign, Globe, FileText, Upload, CheckCircle2, AlertCircle, ImageIcon, X, Send, ShieldCheck, ListChecks, ShieldAlert } from 'lucide-react';
 
 interface TaskExecutionPageProps {
   task: Task;
@@ -65,6 +65,13 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Strict KYC verification enforcement: worker must have approved KYC
+    if (user.kyc_status !== 'approved') {
+      setErrorMsg('Access Denied: You must complete KYC verification and receive approval before you can submit or execute tasks.');
+      return;
+    }
+
     if (!proofText.trim()) {
       setErrorMsg('Please enter your written proof or submission notes.');
       return;
@@ -215,6 +222,18 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
           Submit Task Completion Proof
         </h2>
 
+        {user.kyc_status !== 'approved' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start space-x-3.5" id="execution-kyc-guard-alert">
+            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <h4 className="font-bold text-amber-950 text-sm">KYC Verification Required</h4>
+              <p className="text-amber-800 leading-relaxed">
+                You cannot execute tasks or submit completion proofs until your KYC verification is submitted and approved by administration. Please visit your profile to verify your identity.
+              </p>
+            </div>
+          </div>
+        )}
+
         {errorMsg && (
           <div className="bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-xl p-4 flex items-start space-x-2">
             <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
@@ -299,17 +318,30 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !!successMsg}
-              className="flex-1 py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl transition-all cursor-pointer shadow-md shadow-indigo-100 disabled:opacity-50 flex items-center justify-center space-x-2"
+              disabled={isSubmitting || !!successMsg || user.kyc_status !== 'approved'}
+              className={`flex-1 py-3 px-6 text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center space-x-2 ${
+                user.kyc_status !== 'approved'
+                  ? 'bg-neutral-400 cursor-not-allowed opacity-60'
+                  : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-md shadow-indigo-100 disabled:opacity-50'
+              }`}
             >
-              <Send className="h-4 w-4" />
-              <span>
-                {isSubmitting
-                  ? 'Submitting Proof...'
-                  : isRevision
-                  ? 'Resubmit Updated Proof'
-                  : 'Submit Proof for Advertiser Review'}
-              </span>
+              {user.kyc_status !== 'approved' ? (
+                <>
+                  <ShieldAlert className="h-4 w-4" />
+                  <span>KYC Verification Required to Submit Proof</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  <span>
+                    {isSubmitting
+                      ? 'Submitting Proof...'
+                      : isRevision
+                      ? 'Resubmit Updated Proof'
+                      : 'Submit Proof for Advertiser Review'}
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </form>

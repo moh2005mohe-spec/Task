@@ -6,3 +6,14 @@ export const CONTINENTS: { [key: string]: string[] } = {
   "South America": ["Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador", "Guyana", "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela"],
   "Oceania": ["Australia", "Fiji", "Kiribati", "Marshall Islands", "Micronesia", "Nauru", "New Zealand", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tonga", "Tuvalu", "Vanuatu"]
 };
+
+export function getContinentForCountry(countryName: string): string | null {
+  if (!countryName) return null;
+  const cleanTarget = countryName.trim().toLowerCase();
+  for (const [continent, list] of Object.entries(CONTINENTS)) {
+    if (list.some(c => c.toLowerCase() === cleanTarget || cleanTarget.includes(c.toLowerCase()) || c.toLowerCase().includes(cleanTarget))) {
+      return continent;
+    }
+  }
+  return null;
+}
