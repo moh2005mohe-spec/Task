@@ -34,15 +34,8 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
           getSubmissions()
         ]);
 
-        if (user.role === 'advertiser' || user.role === 'admin') {
-          const myCampaigns = allTasks.filter(t => t.created_by === user.id);
-          const totalSpent = myCampaigns.reduce((sum, c) => sum + (c.total_cost || 0), 0);
-          setStats(prev => ({
-            ...prev,
-            campaignsCreated: myCampaigns.length,
-            totalSpent
-          }));
-        }
+        const myCampaigns = allTasks.filter(t => t.created_by === user.id || t.created_by.toLowerCase() === user.email.toLowerCase());
+        const totalSpent = myCampaigns.reduce((sum, c) => sum + (c.total_cost || 0), 0);
 
         const mySubmissions = allSubmissions.filter(
           s => s.worker_email.toLowerCase() === user.email.toLowerCase()
@@ -58,12 +51,13 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
           }
         });
 
-        setStats(prev => ({
-          ...prev,
+        setStats({
+          campaignsCreated: myCampaigns.length,
+          totalSpent,
           tasksCompleted: approvedSubmissions.length,
           tasksPending: pendingSubmissions.length,
           totalEarned
-        }));
+        });
       } catch (err) {
         console.error('Failed loading profile statistics', err);
       } finally {
@@ -117,10 +111,6 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                 {user.email}
               </p>
               <div className="mt-3 flex items-center space-x-2">
-                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white uppercase tracking-wider border border-white/20">
-                  <Shield className="h-3.5 w-3.5 mr-1" />
-                  {user.role}
-                </span>
                 <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-100 border border-indigo-400/20">
                   <Calendar className="h-3.5 w-3.5 mr-1" />
                   Joined {joinedDate}
@@ -132,7 +122,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 w-full sm:w-auto min-w-[200px]">
             <p className="text-xs font-bold text-indigo-200 uppercase tracking-wider">Wallet Balance</p>
             <p className="text-3xl font-black font-mono text-white mt-1">${user.balance.toFixed(2)} USD</p>
-            {onOpenDeposit && user.role === 'advertiser' && (
+            {onOpenDeposit && user.role !== 'admin' && (
               <button
                 onClick={onOpenDeposit}
                 className="mt-3 w-full py-2 px-3 bg-white hover:bg-neutral-100 text-indigo-900 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center space-x-1"
@@ -163,14 +153,6 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
             <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-100">
               <p className="text-[10px] font-bold text-neutral-400 uppercase">Account Identifier</p>
               <p className="text-xs font-mono font-semibold text-neutral-600 mt-0.5 truncate">{user.id}</p>
-            </div>
-
-            <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-100">
-              <p className="text-[10px] font-bold text-neutral-400 uppercase">Account Type</p>
-              <p className="text-xs font-bold text-neutral-800 mt-0.5 capitalize flex items-center">
-                <Award className="h-3.5 w-3.5 text-indigo-600 mr-1.5" />
-                {user.role} Account
-              </p>
             </div>
           </div>
         </div>
@@ -216,7 +198,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({
                 <p className="text-xs text-amber-700/80 font-medium">Awaiting advertiser review</p>
               </div>
 
-              {user.role === 'advertiser' && (
+              {user.role !== 'admin' && (
                 <div className="bg-purple-50/60 p-4 rounded-2xl border border-purple-100 space-y-1">
                   <div className="flex items-center justify-between text-purple-800">
                     <span className="text-xs font-bold uppercase tracking-wider">Created Campaigns</span>

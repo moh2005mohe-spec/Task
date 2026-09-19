@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Task, User, Submission } from '../types';
+import { Task, User, Submission, CATEGORIES } from '../types';
 import { getTasks, saveSubmission, getSubmissions } from '../lib/supabase';
 import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight } from 'lucide-react';
 
@@ -8,21 +8,6 @@ interface WorkerDashboardProps {
   onBalanceUpdate: (updatedUser: User) => void;
   onSelectTask?: (task: Task) => void;
 }
-
-const CATEGORY_FILTERS = [
-  'All',
-  'Social Media',
-  'Sign up',
-  'YouTube',
-  'App Download',
-  'Surveys',
-  'SEO / Web',
-  'Video / Watch',
-  'Telegram',
-  'Twitter/X',
-  'Reviews',
-  'Other'
-];
 
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanceUpdate, onSelectTask }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -146,8 +131,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
            selectedCategory.toLowerCase().includes(task.category.toLowerCase());
   });
 
-  // Unique categories dynamically extracted from tasks
-  const allCategories = Array.from(new Set([...CATEGORY_FILTERS, ...tasks.map(t => t.category)]));
+  // Filter categories matching CreateTask categories
+  const categoryNames = ['All', ...CATEGORIES.map(c => c.name)];
+  const allCategories = Array.from(new Set([...categoryNames, ...tasks.map(t => t.category)]));
 
   // Helper to compute remaining auto-approval time (3 days = 72 hours)
   const getAutoApprovalTimeString = (submittedAt: string) => {
