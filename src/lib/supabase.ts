@@ -245,7 +245,6 @@ export async function getUsers(): Promise<User[]> {
     return data || [];
   } catch (err) {
     console.warn('Supabase fetch failed, falling back to LocalStorage', err);
-    isUsingFallback = true;
     return getLS<User[]>(LS_KEYS.USERS, defaultUsers);
   }
 }
@@ -269,8 +268,15 @@ export async function saveUser(user: User): Promise<User> {
     return data;
   } catch (err) {
     console.warn('Supabase save user failed, using LocalStorage', err);
-    isUsingFallback = true;
-    return saveUser(user);
+    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
+    const idx = users.findIndex(u => u.email === user.email || u.id === user.id);
+    if (idx >= 0) {
+      users[idx] = user;
+    } else {
+      users.push(user);
+    }
+    setLS(LS_KEYS.USERS, users);
+    return user;
   }
 }
 
@@ -289,8 +295,52 @@ export async function updateUserBalance(userId: string, newBalance: number): Pro
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase update balance failed, using LocalStorage', err);
-    isUsingFallback = true;
-    await updateUserBalance(userId, newBalance);
+    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx >= 0) {
+      users[idx].balance = parseFloat(newBalance.toFixed(2));
+      setLS(LS_KEYS.USERS, users);
+    }
+  }
+}
+
+export async function seedDefaultUsers(): Promise<void> {
+  try {
+    const { count, error } = await supabase.from('custom_users').select('*', { count: 'exact', head: true });
+    if (error) {
+      console.warn('Could not check custom_users for seeding', error);
+      return;
+    }
+    if (count === 0) {
+      console.log('Database custom_users table is empty. Seeding default users...');
+      await supabase.from('custom_users').insert(defaultUsers);
+    } else {
+      for (const u of defaultUsers) {
+        const { data } = await supabase.from('custom_users').select('id').eq('id', u.id).maybeSingle();
+        if (!data) {
+          await supabase.from('custom_users').insert(u);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to seed default users:', err);
+  }
+}
+
+export async function seedDefaultTasks(): Promise<void> {
+  try {
+    const { count, error } = await supabase.from('tasks').select('*', { count: 'exact', head: true });
+    if (error) {
+      console.warn('Could not check tasks for seeding', error);
+      return;
+    }
+    if (count === 0) {
+      console.log('Database tasks table is empty. Seeding default tasks...');
+      await seedDefaultUsers();
+      await supabase.from('tasks').insert(defaultTasks);
+    }
+  } catch (err) {
+    console.error('Failed to seed default tasks:', err);
   }
 }
 
@@ -301,10 +351,18 @@ export async function getTasks(): Promise<Task[]> {
   try {
     const { data, error } = await supabase.from('tasks').select('*');
     if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      await seedDefaultTasks();
+      const { data: refreshedData, error: refreshedError } = await supabase.from('tasks').select('*');
+      if (!refreshedError && refreshedData && refreshedData.length > 0) {
+        return refreshedData;
+      }
+    }
+    
     return data || [];
   } catch (err) {
     console.warn('Supabase fetch tasks failed, using LocalStorage', err);
-    isUsingFallback = true;
     return getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
   }
 }
@@ -322,8 +380,10 @@ export async function saveTask(task: Task): Promise<Task> {
     return data;
   } catch (err) {
     console.warn('Supabase save task failed, using LocalStorage', err);
-    isUsingFallback = true;
-    return saveTask(task);
+    const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
+    tasks.push(task);
+    setLS(LS_KEYS.TASKS, tasks);
+    return task;
   }
 }
 
@@ -344,9 +404,13 @@ export async function updateTaskStatus(taskId: string, status: 'approved' | 'rej
       targetTask = data;
     } catch (err) {
       console.warn('Supabase update task status failed, using LocalStorage', err);
-      isUsingFallback = true;
-      await updateTaskStatus(taskId, status);
-      return;
+      const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
+      const idx = tasks.findIndex(t => t.id === taskId);
+      if (idx >= 0) {
+        tasks[idx].status = status;
+        targetTask = tasks[idx];
+        setLS(LS_KEYS.TASKS, tasks);
+      }
     }
   }
 
@@ -380,7 +444,6 @@ export async function getSubmissions(): Promise<Submission[]> {
       list = data || [];
     } catch (err) {
       console.warn('Supabase fetch submissions failed, using LocalStorage', err);
-      isUsingFallback = true;
       list = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
     }
   }
@@ -470,8 +533,23 @@ export async function saveSubmission(submission: Submission): Promise<Submission
     return data;
   } catch (err) {
     console.warn('Supabase save submission failed, using LocalStorage', err);
-    isUsingFallback = true;
-    return saveSubmission(submission);
+    const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+    const existingIdx = submissions.findIndex(
+      s => s.task_id === submission.task_id && s.worker_email.toLowerCase() === submission.worker_email.toLowerCase()
+    );
+    if (existingIdx >= 0) {
+      submission.id = submissions[existingIdx].id;
+      submissions[existingIdx] = {
+        ...submissions[existingIdx],
+        ...submission,
+        status: 'pending',
+        feedback: undefined
+      };
+    } else {
+      submissions.push(submission);
+    }
+    setLS(LS_KEYS.SUBMISSIONS, submissions);
+    return submission;
   }
 }
 
@@ -497,9 +575,14 @@ export async function updateSubmissionStatus(
       updatedSub = data;
     } catch (err) {
       console.warn('Supabase update submission status failed, using LocalStorage', err);
-      isUsingFallback = true;
-      await updateSubmissionStatus(submissionId, status, feedback);
-      return;
+      const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+      const idx = submissions.findIndex(s => s.id === submissionId);
+      if (idx >= 0) {
+        submissions[idx].status = status;
+        submissions[idx].feedback = feedback;
+        updatedSub = submissions[idx];
+        setLS(LS_KEYS.SUBMISSIONS, submissions);
+      }
     }
   }
 
@@ -570,7 +653,6 @@ export async function getNotifications(userEmailOrId: string): Promise<AppNotifi
     return data || [];
   } catch (err) {
     console.warn('Supabase fetch notifications failed, using LocalStorage', err);
-    isUsingFallback = true;
     const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
     return list.filter(n => n.recipient_email.toLowerCase() === normalized);
   }
@@ -598,7 +680,6 @@ export async function createNotification(
     return data;
   } catch (err) {
     console.warn('Supabase create notification failed, using LocalStorage', err);
-    isUsingFallback = true;
     const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
     list.unshift(newNotif);
     setLS(LS_KEYS.NOTIFICATIONS, list);
@@ -628,8 +709,13 @@ export async function markNotificationsAsRead(userEmailOrId: string): Promise<vo
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase mark notifications read failed, using LocalStorage', err);
-    isUsingFallback = true;
-    await markNotificationsAsRead(userEmailOrId);
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    list.forEach(n => {
+      if (n.recipient_email.toLowerCase() === normalized) {
+        n.read = true;
+      }
+    });
+    setLS(LS_KEYS.NOTIFICATIONS, list);
   }
 }
 
@@ -653,8 +739,12 @@ export async function markSingleNotificationAsRead(notifId: string): Promise<voi
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase mark single notification read failed, using LocalStorage', err);
-    isUsingFallback = true;
-    await markSingleNotificationAsRead(notifId);
+    const list = getLS<AppNotification[]>(LS_KEYS.NOTIFICATIONS, []);
+    const item = list.find(n => n.id === notifId);
+    if (item) {
+      item.read = true;
+    }
+    setLS(LS_KEYS.NOTIFICATIONS, list);
   }
 }
 
@@ -691,11 +781,17 @@ export async function deleteTaskAndRefund(
     setLS(LS_KEYS.SUBMISSIONS, updatedSubmissions);
   } else {
     try {
-      await supabase.from('tasks').delete().eq('id', task.id);
+      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+      if (error) throw error;
     } catch (err) {
-      console.warn('Failed deleting task from Supabase, falling back', err);
-      isUsingFallback = true;
-      return deleteTaskAndRefund(task, advertiserUser);
+      console.warn('Failed deleting task from Supabase, falling back to LocalStorage', err);
+      const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
+      const updatedTasks = tasks.filter(t => t.id !== task.id);
+      setLS(LS_KEYS.TASKS, updatedTasks);
+
+      const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+      const updatedSubmissions = submissions.filter(s => s.task_id !== task.id);
+      setLS(LS_KEYS.SUBMISSIONS, updatedSubmissions);
     }
   }
 
@@ -725,7 +821,6 @@ export async function getKYCVerifications(): Promise<KYCVerification[]> {
     return data || [];
   } catch (err) {
     console.warn('Supabase fetch KYC failed, using LocalStorage', err);
-    isUsingFallback = true;
     return getLS<KYCVerification[]>(LS_KEYS.KYC, []);
   }
 }
@@ -757,8 +852,15 @@ export async function saveKYCVerification(verification: KYCVerification): Promis
     return data;
   } catch (err) {
     console.warn('Supabase save KYC failed, using LocalStorage', err);
-    isUsingFallback = true;
-    return saveKYCVerification(verification);
+    const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+    const idx = list.findIndex(k => k.id === verification.id || k.user_email.toLowerCase() === verification.user_email.toLowerCase());
+    if (idx >= 0) {
+      list[idx] = verification;
+    } else {
+      list.unshift(verification);
+    }
+    setLS(LS_KEYS.KYC, list);
+    return verification;
   }
 }
 
@@ -796,9 +898,15 @@ export async function updateKYCStatus(
       }
     } catch (err) {
       console.warn('Supabase update KYC failed, using LocalStorage', err);
-      isUsingFallback = true;
-      await updateKYCStatus(verificationId, userId, status, rejectionReason);
-      return;
+      const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
+      const idx = list.findIndex(k => k.id === verificationId);
+      if (idx >= 0) {
+        list[idx].status = status;
+        list[idx].rejection_reason = rejectionReason;
+        targetEmail = list[idx].user_email;
+        targetCountry = list[idx].country;
+        setLS(LS_KEYS.KYC, list);
+      }
     }
   }
 
@@ -842,7 +950,6 @@ export async function getPricingSettings(): Promise<{ zones: ZoneConfig[]; categ
     };
   } catch (err) {
     console.warn('Supabase fetch pricing failed, using default', err);
-    isUsingFallback = true;
     const saved = getLS<{ zones: ZoneConfig[]; categories: CategoryConfig[] } | null>(LS_KEYS.PRICING, null);
     return saved || { zones: ZONES, categories: CATEGORIES };
   }
@@ -859,7 +966,6 @@ export async function savePricingSettings(zones: ZoneConfig[], categories: Categ
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase save pricing failed, using LocalStorage', err);
-    isUsingFallback = true;
     setLS(LS_KEYS.PRICING, { zones, categories });
   }
 }
