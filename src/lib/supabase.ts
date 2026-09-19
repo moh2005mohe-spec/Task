@@ -291,18 +291,51 @@ export async function updateTaskStatus(taskId: string, status: 'approved' | 'rej
 }
 
 export async function getSubmissions(): Promise<Submission[]> {
+  let list: Submission[] = [];
   if (isUsingFallback) {
-    return getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+    list = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+  } else {
+    try {
+      const { data, error } = await supabase.from('submissions').select('*');
+      if (error) throw error;
+      list = data || [];
+    } catch (err) {
+      console.warn('Supabase fetch submissions failed, using LocalStorage', err);
+      isUsingFallback = true;
+      list = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+    }
   }
-  try {
-    const { data, error } = await supabase.from('submissions').select('*');
-    if (error) throw error;
-    return data || [];
-  } catch (err) {
-    console.warn('Supabase fetch submissions failed, using LocalStorage', err);
-    isUsingFallback = true;
-    return getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
+
+  // Check 3-day auto-approval rule for pending submissions
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 72 hours
+  const now = Date.now();
+  let updated = false;
+
+  for (const sub of list) {
+    if (sub.status === 'pending') {
+      const submittedTime = new Date(sub.submitted_at).getTime();
+      if (!isNaN(submittedTime) && (now - submittedTime) >= THREE_DAYS_MS) {
+        sub.status = 'approved';
+        sub.feedback = 'Auto-approved after 3 days without advertiser review.';
+        await updateSubmissionStatus(sub.id, 'approved', sub.feedback);
+
+        // Credit worker balance
+        const tasks = await getTasks();
+        const matchedTask = tasks.find(t => t.id === sub.task_id);
+        if (matchedTask) {
+          const users = await getUsers();
+          const worker = users.find(u => u.email.toLowerCase() === sub.worker_email.toLowerCase());
+          if (worker) {
+            const newBal = parseFloat((worker.balance + matchedTask.worker_pay).toFixed(2));
+            await updateUserBalance(worker.id, newBal);
+          }
+        }
+        updated = true;
+      }
+    }
   }
+
+  return list;
 }
 
 export async function saveSubmission(submission: Submission): Promise<Submission> {

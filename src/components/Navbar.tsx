@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onChangeRole(user.role === 'admin' ? 'admin' : 'advertiser')}>
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onChangeRole(user.role === 'admin' ? 'admin' : 'worker')}>
             <div className="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center shadow-md shadow-indigo-100">
               <CheckSquare className="h-5 w-5" />
             </div>
@@ -82,8 +82,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               ) : (
                 <>
                   <button
+                    onClick={() => onChangeRole('worker')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
+                      activeRole === 'worker'
+                        ? 'bg-white text-neutral-900 shadow-xs'
+                        : 'text-neutral-600 hover:text-neutral-900'
+                    }`}
+                  >
+                    <Briefcase className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Tasks</span>
+                  </button>
+                  <button
                     onClick={() => onChangeRole('advertiser')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
                       activeRole === 'advertiser'
                         ? 'bg-white text-neutral-900 shadow-xs'
                         : 'text-neutral-600 hover:text-neutral-900'
@@ -91,17 +102,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <PlusCircle className="h-3.5 w-3.5 text-indigo-500" />
                     <span>Advertiser</span>
-                  </button>
-                  <button
-                    onClick={() => onChangeRole('worker')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all ${
-                      activeRole === 'worker'
-                        ? 'bg-white text-neutral-900 shadow-xs'
-                        : 'text-neutral-600 hover:text-neutral-900'
-                    }`}
-                  >
-                    <Briefcase className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Worker</span>
                   </button>
                 </>
               )}

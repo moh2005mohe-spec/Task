@@ -16,7 +16,7 @@ const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [activeRole, setActiveRole] = useState<'advertiser' | 'worker' | 'admin'>('advertiser');
+  const [activeRole, setActiveRole] = useState<'advertiser' | 'worker' | 'admin'>('worker');
   const [viewMode, setViewMode] = useState<'dashboard' | 'create_task' | 'task_execution' | 'user_profile'>('dashboard');
   const [executingTask, setExecutingTask] = useState<Task | null>(null);
   
@@ -68,7 +68,7 @@ export default function App() {
     if (authenticatedUser.role === 'admin') {
       setActiveRole('admin');
     } else {
-      setActiveRole('advertiser');
+      setActiveRole('worker');
     }
   };
 
@@ -76,7 +76,7 @@ export default function App() {
     setUser(null);
     setViewMode('dashboard');
     setExecutingTask(null);
-    setActiveRole('advertiser');
+    setActiveRole('worker');
     localStorage.removeItem(SESSION_KEY);
   };
 
