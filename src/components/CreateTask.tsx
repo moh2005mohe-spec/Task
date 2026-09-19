@@ -144,7 +144,7 @@ export const CreateTask: React.FC<CreateTaskProps> = ({ user, onSuccess, onCance
         total_cost: totalCost,
         instructions: instructions.trim(),
         require_proof: requireProof,
-        status: 'pending_review',
+        status: 'approved',
         created_by: user.id,
         created_at: new Date().toISOString()
       };

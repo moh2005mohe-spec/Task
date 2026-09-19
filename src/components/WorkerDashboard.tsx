@@ -29,8 +29,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     setLoading(true);
     try {
       const allTasks = await getTasks();
-      // Only display approved live tasks
-      const liveTasks = allTasks.filter(t => t.status === 'approved');
+      // Include all active / approved / live tasks from database
+      const liveTasks = allTasks.filter(t => t.status === 'approved' || t.status === 'pending_review' || !t.status);
       setTasks(liveTasks);
 
       const allSubmissions = await getSubmissions();
@@ -125,8 +125,11 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     return found ? found.status : null;
   };
 
-  // Filter tasks by selected category
-  const filteredTasks = tasks.filter((task) => {
+  // Filter out tasks that the worker has already submitted so they disappear from Available Tasks
+  const unsubmittedTasks = tasks.filter((task) => !hasSubmitted(task.id));
+
+  // Filter available tasks by selected category
+  const filteredTasks = unsubmittedTasks.filter((task) => {
     if (selectedCategory === 'All') return true;
     return task.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
            selectedCategory.toLowerCase().includes(task.category.toLowerCase());
@@ -183,7 +186,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             }`}
           >
             <Briefcase className="h-4 w-4" />
-            <span>Available Tasks ({tasks.length})</span>
+            <span>Available Tasks ({unsubmittedTasks.length})</span>
           </button>
 
           <button
