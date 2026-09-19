@@ -65,6 +65,12 @@ ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies if they exist to prevent duplicate policy errors on re-run
+DROP POLICY IF EXISTS "Public full access on custom_users" ON custom_users;
+DROP POLICY IF EXISTS "Public full access on tasks" ON tasks;
+DROP POLICY IF EXISTS "Public full access on submissions" ON submissions;
+DROP POLICY IF EXISTS "Public full access on notifications" ON notifications;
+
 -- Allow public read/write policies since we are using anon key for simplicity
 CREATE POLICY "Public full access on custom_users" ON custom_users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on tasks" ON tasks FOR ALL USING (true) WITH CHECK (true);
