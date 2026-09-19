@@ -249,8 +249,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
         </div>
       </div>
 
-      {/* KYC Status & Strict Geo-Targeting Banner */}
-      {user.kyc_status !== 'approved' ? (
+      {/* KYC Status Banner */}
+      {user.kyc_status !== 'approved' && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" id="worker-kyc-guard-banner">
           <div className="flex items-start space-x-3.5">
             <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
@@ -268,19 +268,6 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
             <ShieldCheck className="h-4 w-4 mr-1.5" />
             <span>Verify KYC Now</span>
           </button>
-        </div>
-      ) : (
-        <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between gap-4 text-xs" id="worker-geo-status-banner">
-          <div className="flex items-center space-x-2.5 text-indigo-950">
-            <MapPin className="h-4 w-4 text-indigo-600 shrink-0" />
-            <span>
-              <strong>Strict KYC Geo-Targeting Active:</strong> Verified for <strong>{user.kyc_country || 'Global'}</strong> ({workerContinent || 'Worldwide'}). You are strictly seeing tasks targeted for your verified location.
-            </span>
-          </div>
-          <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            KYC Verified
-          </span>
         </div>
       )}
 

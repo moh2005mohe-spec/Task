@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import { saveUser, getUsers } from '../lib/supabase';
+import { saveUser, getUsers, checkLoginRateLimit, recordFailedLoginAttempt, resetLoginAttempts, sanitizeInput } from '../lib/supabase';
 import { Mail, Lock, UserPlus, LogIn, Sparkles, CheckSquare, Shield, AlertCircle } from 'lucide-react';
 
 interface AuthProps {
@@ -22,10 +22,11 @@ export const Auth: React.FC<AuthProps> = ({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Simple authentication implementation
+  // Authentication implementation with Rate Limiting & Input Sanitization
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    const cleanEmail = sanitizeInput(email.trim());
+    if (!cleanEmail || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -34,18 +35,26 @@ export const Auth: React.FC<AuthProps> = ({
     setError('');
 
     try {
-      const users = await getUsers();
-
       if (isLogin) {
-        // Handle Login
+        // Check Rate Limit (max 3 failed attempts, 15 minutes lockout)
+        const rateCheck = await checkLoginRateLimit(cleanEmail);
+        if (rateCheck.blocked) {
+          setError(`Too many failed login attempts. Account temporarily locked. Please try again after ${rateCheck.remainingMinutes || 15} minutes.`);
+          setLoading(false);
+          return;
+        }
+
+        const users = await getUsers();
         const found = users.find(
-          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+          u => u.email.toLowerCase() === cleanEmail.toLowerCase() && u.password === password
         );
+
         if (found) {
+          await resetLoginAttempts(cleanEmail);
           onAuthSuccess(found);
         } else {
-          // Check for a fallback condition or generic demo
-          if (email.toLowerCase() === 'admin@taskzone.com' && password === 'admin123') {
+          // Check for fallback demo accounts
+          if (cleanEmail.toLowerCase() === 'admin@taskzone.com' && password === 'admin123') {
             const adminUser: User = {
               id: 'admin-id',
               email: 'admin@taskzone.com',
@@ -55,8 +64,9 @@ export const Auth: React.FC<AuthProps> = ({
               created_at: new Date().toISOString()
             };
             await saveUser(adminUser);
+            await resetLoginAttempts(cleanEmail);
             onAuthSuccess(adminUser);
-          } else if (email.toLowerCase() === 'demo@taskzone.com' && password === 'password123') {
+          } else if (cleanEmail.toLowerCase() === 'demo@taskzone.com' && password === 'password123') {
             const advertiserUser: User = {
               id: 'demo-advertiser',
               email: 'demo@taskzone.com',
@@ -66,34 +76,37 @@ export const Auth: React.FC<AuthProps> = ({
               created_at: new Date().toISOString()
             };
             await saveUser(advertiserUser);
+            await resetLoginAttempts(cleanEmail);
             onAuthSuccess(advertiserUser);
           } else {
-            setError('Invalid email or password.');
+            await recordFailedLoginAttempt(cleanEmail);
+            setError('Invalid email or password. Note: Exceeding 3 failed attempts will lock login for 15 minutes.');
           }
         }
       } else {
         // Handle Registration
-        const exists = users.some(u => u.email.toLowerCase() === email.toLowerCase());
+        const users = await getUsers();
+        const exists = users.some(u => u.email.toLowerCase() === cleanEmail.toLowerCase());
         if (exists) {
           setError('An account with this email already exists.');
           setLoading(false);
           return;
         }
 
-        // Determine if admin or advertiser based on email domain or selection (default advertiser)
-        const isEmailAdmin = email.toLowerCase() === 'admin@taskzone.com' || email.toLowerCase().startsWith('admin+');
+        const isEmailAdmin = cleanEmail.toLowerCase() === 'admin@taskzone.com' || cleanEmail.toLowerCase().startsWith('admin+');
         const role = isEmailAdmin ? 'admin' : 'advertiser';
 
         const newUser: User = {
           id: 'user-' + Math.random().toString(36).substr(2, 9),
-          email: email.trim(),
-          password: password, // For simplicity and the requested English/DB setup
-          balance: role === 'admin' ? 9999.00 : 100.00, // Pre-seeded starting balance
+          email: cleanEmail,
+          password: password,
+          balance: role === 'admin' ? 9999.00 : 100.00,
           role: role,
           created_at: new Date().toISOString()
         };
 
         const saved = await saveUser(newUser);
+        await resetLoginAttempts(cleanEmail);
         onAuthSuccess(saved);
       }
     } catch (err: any) {

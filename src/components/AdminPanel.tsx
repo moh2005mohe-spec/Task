@@ -11,6 +11,9 @@ import {
   updateKYCStatus,
   getPricingSettings,
   savePricingSettings,
+  checkLoginRateLimit,
+  recordFailedLoginAttempt,
+  resetLoginAttempts,
   SETUP_SQL
 } from '../lib/supabase';
 import {
@@ -90,14 +93,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ user, onShowSqlModal, is
 
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const adminEmail = 'admin@taskzone.com';
+    const rateCheck = await checkLoginRateLimit(adminEmail);
+    if (rateCheck.blocked) {
+      setAuthError(`Too many failed admin login attempts. Temporarily locked for ${rateCheck.remainingMinutes || 15} minutes.`);
+      return;
+    }
+
     if (password === 'admin123') {
       setIsAuthenticated(true);
       localStorage.setItem(ADMIN_SESSION_KEY, 'true');
       setAuthError('');
+      await resetLoginAttempts(adminEmail);
     } else {
-      setAuthError('Incorrect admin access password.');
+      await recordFailedLoginAttempt(adminEmail);
+      setAuthError('Incorrect admin access password. (Exceeding 3 failed attempts locks admin login for 15 minutes)');
     }
   };
 

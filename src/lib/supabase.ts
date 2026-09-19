@@ -88,6 +88,13 @@ CREATE TABLE IF NOT EXISTS pricing_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- Create login_attempts table for rate limiting brute-force protection
+CREATE TABLE IF NOT EXISTS login_attempts (
+  email TEXT PRIMARY KEY,
+  attempts INTEGER DEFAULT 0,
+  last_attempt_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Enable Row Level Security (RLS) bypass / public access for ease of use in demo
 ALTER TABLE custom_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
@@ -95,6 +102,7 @@ ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kyc_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pricing_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE login_attempts ENABLE ROW LEVEL SECURITY;
 
 -- Drop policies if they exist to prevent duplicate policy errors on re-run
 DROP POLICY IF EXISTS "Public full access on custom_users" ON custom_users;
@@ -103,6 +111,7 @@ DROP POLICY IF EXISTS "Public full access on submissions" ON submissions;
 DROP POLICY IF EXISTS "Public full access on notifications" ON notifications;
 DROP POLICY IF EXISTS "Public full access on kyc_verifications" ON kyc_verifications;
 DROP POLICY IF EXISTS "Public full access on pricing_settings" ON pricing_settings;
+DROP POLICY IF EXISTS "Public full access on login_attempts" ON login_attempts;
 
 -- Allow public read/write policies since we are using anon key for simplicity
 CREATE POLICY "Public full access on custom_users" ON custom_users FOR ALL USING (true) WITH CHECK (true);
@@ -111,6 +120,7 @@ CREATE POLICY "Public full access on submissions" ON submissions FOR ALL USING (
 CREATE POLICY "Public full access on notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on kyc_verifications" ON kyc_verifications FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access on pricing_settings" ON pricing_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access on login_attempts" ON login_attempts FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert dummy admin user (password: admin123)
 INSERT INTO custom_users (id, email, balance, role, password, kyc_status, created_at)
@@ -870,5 +880,111 @@ export async function savePricingSettings(zones: ZoneConfig[], categories: Categ
   } catch (err) {
     console.warn('Supabase save pricing failed, using LocalStorage', err);
     setLS(LS_KEYS.PRICING, { zones, categories });
+  }
+}
+
+// Security & Sanitization Helpers
+export function sanitizeInput(input: string): string {
+  if (!input) return '';
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+// Login Rate Limiting (max 3 failed attempts, 15 minutes lockout)
+interface LoginAttemptRecord {
+  email: string;
+  attempts: number;
+  last_attempt_at: string;
+}
+
+const LS_LOGIN_ATTEMPTS = 'taskzone_fallback_login_attempts';
+
+export async function checkLoginRateLimit(email: string): Promise<{ blocked: boolean; remainingMinutes?: number }> {
+  const cleanEmail = email.trim().toLowerCase();
+  const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+  const MAX_ATTEMPTS = 3;
+
+  try {
+    const { data, error } = await supabase
+      .from('login_attempts')
+      .select('*')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
+    if (data) {
+      const lastAttempt = new Date(data.last_attempt_at).getTime();
+      const now = Date.now();
+      const diff = now - lastAttempt;
+
+      if (data.attempts >= MAX_ATTEMPTS && diff < LOCKOUT_DURATION_MS) {
+        const remainingMs = LOCKOUT_DURATION_MS - diff;
+        const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+        return { blocked: true, remainingMinutes };
+      } else if (diff >= LOCKOUT_DURATION_MS && data.attempts >= MAX_ATTEMPTS) {
+        await resetLoginAttempts(cleanEmail);
+      }
+    }
+  } catch (err) {
+    const attemptsMap = getLS<Record<string, LoginAttemptRecord>>(LS_LOGIN_ATTEMPTS, {});
+    const record = attemptsMap[cleanEmail];
+    if (record) {
+      const lastAttempt = new Date(record.last_attempt_at).getTime();
+      const now = Date.now();
+      const diff = now - lastAttempt;
+      if (record.attempts >= MAX_ATTEMPTS && diff < LOCKOUT_DURATION_MS) {
+        const remainingMs = LOCKOUT_DURATION_MS - diff;
+        const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+        return { blocked: true, remainingMinutes };
+      } else if (diff >= LOCKOUT_DURATION_MS && record.attempts >= MAX_ATTEMPTS) {
+        delete attemptsMap[cleanEmail];
+        setLS(LS_LOGIN_ATTEMPTS, attemptsMap);
+      }
+    }
+  }
+
+  return { blocked: false };
+}
+
+export async function recordFailedLoginAttempt(email: string): Promise<void> {
+  const cleanEmail = email.trim().toLowerCase();
+  const nowIso = new Date().toISOString();
+
+  try {
+    const { data } = await supabase
+      .from('login_attempts')
+      .select('*')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
+    const currentAttempts = data ? data.attempts + 1 : 1;
+
+    await supabase.from('login_attempts').upsert({
+      email: cleanEmail,
+      attempts: currentAttempts,
+      last_attempt_at: nowIso
+    });
+  } catch (err) {
+    const attemptsMap = getLS<Record<string, LoginAttemptRecord>>(LS_LOGIN_ATTEMPTS, {});
+    const current = attemptsMap[cleanEmail] || { email: cleanEmail, attempts: 0, last_attempt_at: nowIso };
+    current.attempts += 1;
+    current.last_attempt_at = nowIso;
+    attemptsMap[cleanEmail] = current;
+    setLS(LS_LOGIN_ATTEMPTS, attemptsMap);
+  }
+}
+
+export async function resetLoginAttempts(email: string): Promise<void> {
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    await supabase.from('login_attempts').delete().eq('email', cleanEmail);
+  } catch (err) {
+    const attemptsMap = getLS<Record<string, LoginAttemptRecord>>(LS_LOGIN_ATTEMPTS, {});
+    delete attemptsMap[cleanEmail];
+    setLS(LS_LOGIN_ATTEMPTS, attemptsMap);
   }
 }
