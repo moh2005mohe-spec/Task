@@ -382,6 +382,7 @@ export async function getSubmissions(): Promise<Submission[]> {
 
 export async function saveSubmission(submission: Submission): Promise<Submission> {
   submission.status = 'pending';
+  submission.feedback = undefined;
   submission.submitted_at = new Date().toISOString();
 
   if (isUsingFallback) {
@@ -391,7 +392,12 @@ export async function saveSubmission(submission: Submission): Promise<Submission
     );
     if (existingIdx >= 0) {
       submission.id = submissions[existingIdx].id;
-      submissions[existingIdx] = submission;
+      submissions[existingIdx] = {
+        ...submissions[existingIdx],
+        ...submission,
+        status: 'pending',
+        feedback: undefined
+      };
     } else {
       submissions.push(submission);
     }
@@ -411,7 +417,18 @@ export async function saveSubmission(submission: Submission): Promise<Submission
       submission.id = existing.id;
     }
 
-    const { data, error } = await supabase.from('submissions').upsert(submission).select().single();
+    const payload = {
+      id: submission.id,
+      task_id: submission.task_id,
+      worker_email: submission.worker_email,
+      proof_text: submission.proof_text,
+      proof_image: submission.proof_image || null,
+      status: 'pending',
+      feedback: null,
+      submitted_at: submission.submitted_at
+    };
+
+    const { data, error } = await supabase.from('submissions').upsert(payload).select().single();
     if (error) throw error;
     return data;
   } catch (err) {
@@ -464,6 +481,20 @@ export async function updateSubmissionStatus(
       notifTitle = 'Submission Approved & Paid!';
       notifMsg = `Congratulations! Your submission for "${taskTitle}" was approved and $${pay.toFixed(2)} USD has been credited to your balance.`;
       notifType = 'submission_approved';
+
+      // Credit worker balance automatically
+      if (matchedTask) {
+        try {
+          const users = await getUsers();
+          const worker = users.find(u => u.email.toLowerCase() === updatedSub!.worker_email.toLowerCase());
+          if (worker) {
+            const newBal = parseFloat((worker.balance + pay).toFixed(2));
+            await updateUserBalance(worker.id, newBal);
+          }
+        } catch (err) {
+          console.error('Failed crediting worker balance on approval', err);
+        }
+      }
     } else if (status === 'rejected') {
       notifTitle = 'Submission Declined';
       notifMsg = `Your submission for "${taskTitle}" was declined by the advertiser.`;

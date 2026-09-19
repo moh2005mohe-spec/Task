@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
-import { saveSubmission } from '../lib/supabase';
+import { saveSubmission, getSubmissions } from '../lib/supabase';
 import { ArrowLeft, Clock, DollarSign, Globe, FileText, Upload, CheckCircle2, AlertCircle, ImageIcon, X, Send, ShieldCheck, ListChecks } from 'lucide-react';
 
 interface TaskExecutionPageProps {
@@ -18,13 +18,33 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
   onBack,
   onSuccess
 }) => {
+  const [activeSubmission, setActiveSubmission] = useState<Submission | undefined>(workerSubmission);
   const [proofText, setProofText] = useState(workerSubmission?.proof_text || '');
   const [proofImageBase64, setProofImageBase64] = useState<string>(workerSubmission?.proof_image || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const isRevision = workerSubmission?.status === 'revision_requested';
+  useEffect(() => {
+    const fetchExisting = async () => {
+      try {
+        const allSubs = await getSubmissions();
+        const mySub = allSubs.find(
+          s => s.task_id === task.id && s.worker_email.toLowerCase() === user.email.toLowerCase()
+        );
+        if (mySub) {
+          setActiveSubmission(mySub);
+          if (!proofText) setProofText(mySub.proof_text || '');
+          if (!proofImageBase64) setProofImageBase64(mySub.proof_image || '');
+        }
+      } catch (err) {
+        console.error('Failed to load existing submission in TaskExecutionPage', err);
+      }
+    };
+    fetchExisting();
+  }, [task.id, user.email]);
+
+  const isRevision = activeSubmission?.status === 'revision_requested';
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,12 +75,13 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
 
     try {
       const newSubmission: Submission = {
-        id: workerSubmission?.id || 'sub_' + Math.random().toString(36).substr(2, 9),
+        id: activeSubmission?.id || workerSubmission?.id || 'sub_' + Math.random().toString(36).substr(2, 9),
         task_id: task.id,
         worker_email: user.email,
         proof_text: proofText.trim(),
         proof_image: proofImageBase64 || undefined,
         status: 'pending',
+        feedback: undefined,
         submitted_at: new Date().toISOString()
       };
 
@@ -69,7 +90,7 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
 
       setTimeout(() => {
         onSuccess();
-      }, 1500);
+      }, 1200);
     } catch (err: any) {
       console.error('Failed submitting proof', err);
       setErrorMsg(err.message || 'Failed submitting task proof. Please try again.');
@@ -96,14 +117,14 @@ export const TaskExecutionPage: React.FC<TaskExecutionPageProps> = ({
       </div>
 
       {/* Revision Request Banner if applicable */}
-      {isRevision && workerSubmission?.feedback && (
+      {isRevision && (activeSubmission?.feedback || workerSubmission?.feedback) && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-5 space-y-2 shadow-xs">
           <div className="flex items-center space-x-2 text-amber-800 font-bold">
             <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
             <span className="text-sm">Advertiser Requested Revision</span>
           </div>
           <p className="text-xs text-amber-900 leading-relaxed font-medium bg-white/70 p-3 rounded-xl border border-amber-100 italic">
-            "{workerSubmission.feedback}"
+            "{activeSubmission?.feedback || workerSubmission?.feedback}"
           </p>
           <p className="text-[11px] text-amber-700 font-semibold">
             Please make the requested adjustments below and click "Resubmit Updated Proof".

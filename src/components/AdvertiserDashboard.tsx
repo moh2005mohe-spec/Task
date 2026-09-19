@@ -493,7 +493,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
           <div className="divide-y divide-neutral-100">
             {submissions.map((sub) => {
               const matchedTask = campaigns.find(c => c.id === sub.task_id);
-              if (!matchedTask) return null;
+              const campaignTitle = matchedTask ? matchedTask.title : 'Campaign Task';
 
               return (
                 <div key={sub.id} className="p-6 hover:bg-neutral-50/30 transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -509,7 +509,7 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     </div>
                     
                     <p className="text-xs font-bold text-neutral-500 uppercase tracking-wide">
-                      Campaign: <span className="text-neutral-800 normal-case">{matchedTask.title}</span>
+                      Campaign: <span className="text-neutral-800 normal-case font-extrabold">{campaignTitle}</span>
                     </p>
 
                     {/* Submitted Proof Details */}
@@ -548,28 +548,31 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                     </div>
                   </div>
 
-                  {/* Actions for pending submissions */}
-                  {sub.status === 'pending' && (
-                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-32">
+                  {/* Actions for pending or revision_requested submissions */}
+                  {(sub.status === 'pending' || sub.status === 'revision_requested') && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
                       <button
                         onClick={() => handleReviewSubmission(sub.id, 'approved')}
-                        className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all shadow-xs cursor-pointer"
+                        className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Approve submission and credit worker balance"
                       >
                         <Check className="h-3.5 w-3.5" />
-                        <span>Approve</span>
+                        <span>Approve & Pay</span>
                       </button>
                       
                       <button
                         onClick={() => handleOpenRevisionModal(sub)}
-                        className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                        className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                        title="Request revision or correction from worker"
                       >
                         <RefreshCw className="h-3.5 w-3.5" />
-                        <span>Revision</span>
+                        <span>Request Fix</span>
                       </button>
 
                       <button
                         onClick={() => handleReviewSubmission(sub.id, 'rejected')}
-                        className="flex-1 py-2 px-3 border border-rose-200 hover:bg-rose-50 text-rose-700 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer"
+                        className="flex-1 py-2 px-3 border border-rose-200 hover:bg-rose-50 text-rose-700 font-semibold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                        title="Decline submission"
                       >
                         <X className="h-3.5 w-3.5" />
                         <span>Decline</span>
