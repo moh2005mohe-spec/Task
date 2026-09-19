@@ -37,7 +37,9 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
     setLoading(true);
     try {
       const allTasks = await getTasks();
-      const userTasks = allTasks.filter(t => t.created_by === user.id);
+      const userTasks = allTasks.filter(
+        t => t.created_by === user.id || t.created_by === user.email || (t.created_by && user.email && t.created_by.toLowerCase() === user.email.toLowerCase())
+      );
       setCampaigns(userTasks);
 
       // Fetch submissions for these tasks

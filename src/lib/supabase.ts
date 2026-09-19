@@ -128,19 +128,19 @@ export function setUsingFallback(val: boolean) {
 // Check database connection and tables existence
 export async function testDbConnection(): Promise<{ connected: boolean; hasTables: boolean; error?: string }> {
   try {
-    const { data, error } = await supabase.from('custom_users').select('count', { count: 'exact', head: true });
+    const { error } = await supabase.from('custom_users').select('id', { count: 'exact', head: true });
     if (error) {
       if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
         isUsingFallback = true;
         return { connected: true, hasTables: false, error: 'Tables do not exist. Please run the SQL schema.' };
       }
-      isUsingFallback = true;
+      isUsingFallback = false;
       return { connected: false, hasTables: false, error: error.message };
     }
     isUsingFallback = false;
     return { connected: true, hasTables: true };
   } catch (err: any) {
-    isUsingFallback = true;
+    isUsingFallback = false;
     return { connected: false, hasTables: false, error: err.message };
   }
 }
@@ -236,32 +236,17 @@ if (!localStorage.getItem(LS_KEYS.SUBMISSIONS)) setLS(LS_KEYS.SUBMISSIONS, defau
 
 // Database Operations
 export async function getUsers(): Promise<User[]> {
-  if (isUsingFallback) {
-    return getLS<User[]>(LS_KEYS.USERS, defaultUsers);
-  }
   try {
     const { data, error } = await supabase.from('custom_users').select('*');
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.warn('Supabase fetch failed, falling back to LocalStorage', err);
+    console.warn('Supabase fetch users failed, falling back to LocalStorage', err);
     return getLS<User[]>(LS_KEYS.USERS, defaultUsers);
   }
 }
 
 export async function saveUser(user: User): Promise<User> {
-  if (isUsingFallback) {
-    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
-    // Avoid duplicates
-    const idx = users.findIndex(u => u.email === user.email || u.id === user.id);
-    if (idx >= 0) {
-      users[idx] = user;
-    } else {
-      users.push(user);
-    }
-    setLS(LS_KEYS.USERS, users);
-    return user;
-  }
   try {
     const { data, error } = await supabase.from('custom_users').upsert(user).select().single();
     if (error) throw error;
@@ -281,15 +266,6 @@ export async function saveUser(user: User): Promise<User> {
 }
 
 export async function updateUserBalance(userId: string, newBalance: number): Promise<void> {
-  if (isUsingFallback) {
-    const users = getLS<User[]>(LS_KEYS.USERS, defaultUsers);
-    const idx = users.findIndex(u => u.id === userId);
-    if (idx >= 0) {
-      users[idx].balance = parseFloat(newBalance.toFixed(2));
-      setLS(LS_KEYS.USERS, users);
-    }
-    return;
-  }
   try {
     const { error } = await supabase.from('custom_users').update({ balance: parseFloat(newBalance.toFixed(2)) }).eq('id', userId);
     if (error) throw error;
@@ -345,16 +321,19 @@ export async function seedDefaultTasks(): Promise<void> {
 }
 
 export async function getTasks(): Promise<Task[]> {
-  if (isUsingFallback) {
-    return getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
-  }
   try {
-    const { data, error } = await supabase.from('tasks').select('*');
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (error) throw error;
     
     if (!data || data.length === 0) {
       await seedDefaultTasks();
-      const { data: refreshedData, error: refreshedError } = await supabase.from('tasks').select('*');
+      const { data: refreshedData, error: refreshedError } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (!refreshedError && refreshedData && refreshedData.length > 0) {
         return refreshedData;
       }
@@ -368,12 +347,6 @@ export async function getTasks(): Promise<Task[]> {
 }
 
 export async function saveTask(task: Task): Promise<Task> {
-  if (isUsingFallback) {
-    const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
-    tasks.push(task);
-    setLS(LS_KEYS.TASKS, tasks);
-    return task;
-  }
   try {
     const { data, error } = await supabase.from('tasks').insert(task).select().single();
     if (error) throw error;
@@ -389,28 +362,18 @@ export async function saveTask(task: Task): Promise<Task> {
 
 export async function updateTaskStatus(taskId: string, status: 'approved' | 'rejected'): Promise<void> {
   let targetTask: Task | undefined;
-  if (isUsingFallback) {
+  try {
+    const { data, error } = await supabase.from('tasks').update({ status }).eq('id', taskId).select().single();
+    if (error) throw error;
+    targetTask = data;
+  } catch (err) {
+    console.warn('Supabase update task status failed, using LocalStorage', err);
     const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
     const idx = tasks.findIndex(t => t.id === taskId);
     if (idx >= 0) {
       tasks[idx].status = status;
       targetTask = tasks[idx];
       setLS(LS_KEYS.TASKS, tasks);
-    }
-  } else {
-    try {
-      const { data, error } = await supabase.from('tasks').update({ status }).eq('id', taskId).select().single();
-      if (error) throw error;
-      targetTask = data;
-    } catch (err) {
-      console.warn('Supabase update task status failed, using LocalStorage', err);
-      const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
-      const idx = tasks.findIndex(t => t.id === taskId);
-      if (idx >= 0) {
-        tasks[idx].status = status;
-        targetTask = tasks[idx];
-        setLS(LS_KEYS.TASKS, tasks);
-      }
     }
   }
 
@@ -435,17 +398,13 @@ export async function updateTaskStatus(taskId: string, status: 'approved' | 'rej
 
 export async function getSubmissions(): Promise<Submission[]> {
   let list: Submission[] = [];
-  if (isUsingFallback) {
+  try {
+    const { data, error } = await supabase.from('submissions').select('*');
+    if (error) throw error;
+    list = data || [];
+  } catch (err) {
+    console.warn('Supabase fetch submissions failed, using LocalStorage', err);
     list = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-  } else {
-    try {
-      const { data, error } = await supabase.from('submissions').select('*');
-      if (error) throw error;
-      list = data || [];
-    } catch (err) {
-      console.warn('Supabase fetch submissions failed, using LocalStorage', err);
-      list = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-    }
   }
 
   // Check 3-day auto-approval rule for pending submissions
@@ -559,7 +518,12 @@ export async function updateSubmissionStatus(
   feedback?: string
 ): Promise<void> {
   let updatedSub: Submission | undefined;
-  if (isUsingFallback) {
+  try {
+    const { data, error } = await supabase.from('submissions').update({ status, feedback }).eq('id', submissionId).select().single();
+    if (error) throw error;
+    updatedSub = data;
+  } catch (err) {
+    console.warn('Supabase update submission status failed, using LocalStorage', err);
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
     const idx = submissions.findIndex(s => s.id === submissionId);
     if (idx >= 0) {
@@ -567,22 +531,6 @@ export async function updateSubmissionStatus(
       submissions[idx].feedback = feedback;
       updatedSub = submissions[idx];
       setLS(LS_KEYS.SUBMISSIONS, submissions);
-    }
-  } else {
-    try {
-      const { data, error } = await supabase.from('submissions').update({ status, feedback }).eq('id', submissionId).select().single();
-      if (error) throw error;
-      updatedSub = data;
-    } catch (err) {
-      console.warn('Supabase update submission status failed, using LocalStorage', err);
-      const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-      const idx = submissions.findIndex(s => s.id === submissionId);
-      if (idx >= 0) {
-        submissions[idx].status = status;
-        submissions[idx].feedback = feedback;
-        updatedSub = submissions[idx];
-        setLS(LS_KEYS.SUBMISSIONS, submissions);
-      }
     }
   }
 
@@ -771,7 +719,11 @@ export async function deleteTaskAndRefund(
   const refundedAmount = Math.max(0, task.total_cost - approvedPayout);
 
   // 1. Delete task from DB/LocalStorage
-  if (isUsingFallback) {
+  try {
+    const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+    if (error) throw error;
+  } catch (err) {
+    console.warn('Failed deleting task from Supabase, falling back to LocalStorage', err);
     const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
     const updatedTasks = tasks.filter(t => t.id !== task.id);
     setLS(LS_KEYS.TASKS, updatedTasks);
@@ -779,20 +731,6 @@ export async function deleteTaskAndRefund(
     const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
     const updatedSubmissions = submissions.filter(s => s.task_id !== task.id);
     setLS(LS_KEYS.SUBMISSIONS, updatedSubmissions);
-  } else {
-    try {
-      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Failed deleting task from Supabase, falling back to LocalStorage', err);
-      const tasks = getLS<Task[]>(LS_KEYS.TASKS, defaultTasks);
-      const updatedTasks = tasks.filter(t => t.id !== task.id);
-      setLS(LS_KEYS.TASKS, updatedTasks);
-
-      const submissions = getLS<Submission[]>(LS_KEYS.SUBMISSIONS, defaultSubmissions);
-      const updatedSubmissions = submissions.filter(s => s.task_id !== task.id);
-      setLS(LS_KEYS.SUBMISSIONS, updatedSubmissions);
-    }
   }
 
   // 2. Refund remaining amount to advertiser balance
@@ -812,9 +750,6 @@ export async function deleteTaskAndRefund(
 
 // KYC Database Functions
 export async function getKYCVerifications(): Promise<KYCVerification[]> {
-  if (isUsingFallback) {
-    return getLS<KYCVerification[]>(LS_KEYS.KYC, []);
-  }
   try {
     const { data, error } = await supabase.from('kyc_verifications').select('*').order('created_at', { ascending: false });
     if (error) throw error;
@@ -835,17 +770,6 @@ export async function saveKYCVerification(verification: KYCVerification): Promis
     await saveUser(user);
   }
 
-  if (isUsingFallback) {
-    const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
-    const idx = list.findIndex(k => k.id === verification.id || k.user_email.toLowerCase() === verification.user_email.toLowerCase());
-    if (idx >= 0) {
-      list[idx] = verification;
-    } else {
-      list.unshift(verification);
-    }
-    setLS(LS_KEYS.KYC, list);
-    return verification;
-  }
   try {
     const { data, error } = await supabase.from('kyc_verifications').upsert(verification).select().single();
     if (error) throw error;
@@ -873,7 +797,20 @@ export async function updateKYCStatus(
   let targetEmail = '';
   let targetCountry = '';
 
-  if (isUsingFallback) {
+  try {
+    const { data, error } = await supabase
+      .from('kyc_verifications')
+      .update({ status, rejection_reason: rejectionReason, updated_at: new Date().toISOString() })
+      .eq('id', verificationId)
+      .select()
+      .single();
+    if (error) throw error;
+    if (data) {
+      targetEmail = data.user_email;
+      targetCountry = data.country;
+    }
+  } catch (err) {
+    console.warn('Supabase update KYC failed, using LocalStorage', err);
     const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
     const idx = list.findIndex(k => k.id === verificationId);
     if (idx >= 0) {
@@ -882,31 +819,6 @@ export async function updateKYCStatus(
       targetEmail = list[idx].user_email;
       targetCountry = list[idx].country;
       setLS(LS_KEYS.KYC, list);
-    }
-  } else {
-    try {
-      const { data, error } = await supabase
-        .from('kyc_verifications')
-        .update({ status, rejection_reason: rejectionReason, updated_at: new Date().toISOString() })
-        .eq('id', verificationId)
-        .select()
-        .single();
-      if (error) throw error;
-      if (data) {
-        targetEmail = data.user_email;
-        targetCountry = data.country;
-      }
-    } catch (err) {
-      console.warn('Supabase update KYC failed, using LocalStorage', err);
-      const list = getLS<KYCVerification[]>(LS_KEYS.KYC, []);
-      const idx = list.findIndex(k => k.id === verificationId);
-      if (idx >= 0) {
-        list[idx].status = status;
-        list[idx].rejection_reason = rejectionReason;
-        targetEmail = list[idx].user_email;
-        targetCountry = list[idx].country;
-        setLS(LS_KEYS.KYC, list);
-      }
     }
   }
 
@@ -934,11 +846,6 @@ export async function updateKYCStatus(
 
 // Pricing Settings Functions
 export async function getPricingSettings(): Promise<{ zones: ZoneConfig[]; categories: CategoryConfig[] }> {
-  if (isUsingFallback) {
-    const saved = getLS<{ zones: ZoneConfig[]; categories: CategoryConfig[] } | null>(LS_KEYS.PRICING, null);
-    if (saved) return saved;
-    return { zones: ZONES, categories: CATEGORIES };
-  }
   try {
     const { data, error } = await supabase.from('pricing_settings').select('*').eq('id', 'default_pricing').maybeSingle();
     if (error || !data) {
@@ -957,10 +864,6 @@ export async function getPricingSettings(): Promise<{ zones: ZoneConfig[]; categ
 
 export async function savePricingSettings(zones: ZoneConfig[], categories: CategoryConfig[]): Promise<void> {
   const payload = { id: 'default_pricing', zones, categories, updated_at: new Date().toISOString() };
-  if (isUsingFallback) {
-    setLS(LS_KEYS.PRICING, { zones, categories });
-    return;
-  }
   try {
     const { error } = await supabase.from('pricing_settings').upsert(payload);
     if (error) throw error;

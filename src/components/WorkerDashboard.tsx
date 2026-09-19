@@ -34,8 +34,8 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
     setLoading(true);
     try {
       const allTasks = await getTasks();
-      // Only display tasks approved by Admin
-      const liveTasks = allTasks.filter(t => t.status === 'approved');
+      // Display all active tasks from database (approved or pending review, exclude only rejected)
+      const liveTasks = allTasks.filter(t => t.status !== 'rejected');
       setTasks(liveTasks);
 
       const allSubmissions = await getSubmissions();
@@ -318,7 +318,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                               {task.category}
                             </span>
                             <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200/40">
-                              Zone: {task.zone.split(' (')[0]}
+                              Zone: {(task.zone || 'Global').split(' (')[0]}
                             </span>
                             {task.require_proof && (
                               <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
