@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Task } from './types';
 import { Navbar } from './components/Navbar';
-import { Auth } from './components/Auth';
+import { LandingPage } from './components/LandingPage';
 import { SqlSetupModal } from './components/SqlSetupModal';
 import { CreateTask } from './components/CreateTask';
 import { AdvertiserDashboard } from './components/AdvertiserDashboard';
@@ -180,8 +180,8 @@ export default function App() {
           </main>
         </>
       ) : (
-        /* Sign-In View */
-        <Auth
+        /* SproutGigs Landing Page */
+        <LandingPage
           onAuthSuccess={handleAuthSuccess}
           isDbConnected={isDbConnected}
           isUsingFallback={isUsingFallback}
