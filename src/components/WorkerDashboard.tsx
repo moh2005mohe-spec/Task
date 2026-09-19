@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Task, User, Submission, CATEGORIES } from '../types';
 import { getTasks, saveSubmission, getSubmissions } from '../lib/supabase';
 import { CONTINENTS, getContinentForCountry } from '../data/countries';
-import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight, ShieldCheck, Globe, ShieldAlert, MapPin } from 'lucide-react';
+import { Briefcase, Coins, FileCheck, ImageIcon, Send, X, AlertCircle, Clock, CheckCircle2, XCircle, Filter, ArrowRight, ShieldCheck, Globe, ShieldAlert, MapPin, Star } from 'lucide-react';
 import { KYCModal } from './KYCModal';
 
 interface WorkerDashboardProps {
@@ -527,10 +527,20 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                           )}
 
                           {sub.status === 'approved' && (
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
-                              Paid +${taskPay.toFixed(2)} USD
-                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                                Paid +${taskPay.toFixed(2)} USD
+                              </span>
+                              <button
+                                onClick={() => { /* Implement rating handling for worker */ }}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                                title="Rate this advertiser"
+                              >
+                                <Star className="h-3.5 w-3.5" />
+                                <span>Rate Advertiser</span>
+                              </button>
+                            </div>
                           )}
 
                           {sub.status === 'rejected' && (

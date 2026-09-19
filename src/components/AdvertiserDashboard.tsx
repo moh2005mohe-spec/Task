@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, User, Submission } from '../types';
 import { getTasks, getSubmissions, updateSubmissionStatus, deleteTaskAndRefund, updateUserBalance } from '../lib/supabase';
-import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2, Trash2, RefreshCw, AlertCircle, MessageSquare, ShieldAlert } from 'lucide-react';
+import { PlusCircle, ListTodo, Wallet, CheckCircle2, XCircle, Clock, Check, X, FileText, ImageIcon, UserCheck, CreditCard, ArrowUpRight, Loader2, Trash2, RefreshCw, AlertCircle, MessageSquare, ShieldAlert, Star } from 'lucide-react';
 
 interface AdvertiserDashboardProps {
   user: User;
