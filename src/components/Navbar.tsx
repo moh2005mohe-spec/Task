@@ -43,8 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Database Connection Badge */}
-          <div className="hidden md:flex items-center space-x-2">
-            {isUsingFallback ? (
+          {isUsingFallback && (
+            <div className="hidden md:flex items-center space-x-2">
               <button
                 onClick={onShowSqlModal}
                 className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
@@ -52,13 +52,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="w-1.5 h-1.5 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span>
                 Using Local Storage Fallback (Setup SQL)
               </button>
-            ) : (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                <span className="w-1.5 h-1.5 mr-1.5 bg-emerald-500 rounded-full"></span>
-                Supabase Connected
-              </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* User Session Info & Navigation Controls */}
           <div className="flex items-center space-x-3 sm:space-x-4">

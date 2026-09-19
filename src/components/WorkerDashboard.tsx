@@ -6,9 +6,10 @@ import { Briefcase, Coins, FileCheck, HelpCircle, ImageIcon, Send, X, AlertCircl
 interface WorkerDashboardProps {
   user: User;
   onBalanceUpdate: (updatedUser: User) => void;
+  onSelectTask?: (task: Task) => void;
 }
 
-export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanceUpdate }) => {
+export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanceUpdate, onSelectTask }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [workerSubmissions, setWorkerSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +229,13 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleOpenSubmission(task)}
+                          onClick={() => {
+                            if (onSelectTask) {
+                              onSelectTask(task);
+                            } else {
+                              handleOpenSubmission(task);
+                            }
+                          }}
                           className={`px-4 py-2.5 font-bold text-xs rounded-xl flex items-center justify-center space-x-1 transition-all cursor-pointer shadow-sm ${
                             subStatus === 'revision_requested'
                               ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'

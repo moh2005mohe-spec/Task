@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User } from './types';
+import { User, Task } from './types';
 import { Navbar } from './components/Navbar';
 import { Auth } from './components/Auth';
 import { SqlSetupModal } from './components/SqlSetupModal';
@@ -7,7 +7,8 @@ import { CreateTask } from './components/CreateTask';
 import { AdvertiserDashboard } from './components/AdvertiserDashboard';
 import { WorkerDashboard } from './components/WorkerDashboard';
 import { AdminPanel } from './components/AdminPanel';
-import { UserProfileModal } from './components/UserProfileModal';
+import { UserProfilePage } from './components/UserProfilePage';
+import { TaskExecutionPage } from './components/TaskExecutionPage';
 import { testDbConnection, isUsingFallback as initFallback, saveUser } from './lib/supabase';
 
 const SESSION_KEY = 'taskzone_session_v1';
@@ -16,8 +17,8 @@ const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeRole, setActiveRole] = useState<'advertiser' | 'worker' | 'admin'>('advertiser');
-  const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'dashboard' | 'create_task' | 'task_execution' | 'user_profile'>('dashboard');
+  const [executingTask, setExecutingTask] = useState<Task | null>(null);
   
   // Supabase database status
   const [isDbConnected, setIsDbConnected] = useState(false);
@@ -54,6 +55,7 @@ export default function App() {
 
   const handleAuthSuccess = (authenticatedUser: User) => {
     setUser(authenticatedUser);
+    setViewMode('dashboard');
     
     // Save session in localStorage with 3-hour expiration timestamp
     const expiresAt = Date.now() + THREE_HOURS_MS;
@@ -72,7 +74,8 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
-    setIsCreatingTask(false);
+    setViewMode('dashboard');
+    setExecutingTask(null);
     setActiveRole('advertiser');
     localStorage.removeItem(SESSION_KEY);
   };
@@ -112,26 +115,45 @@ export default function App() {
             activeRole={activeRole}
             onChangeRole={(role) => {
               setActiveRole(role);
-              setIsCreatingTask(false);
+              setViewMode('dashboard');
             }}
             onOpenCreateTask={() => {
-              setIsCreatingTask(true);
+              setViewMode('create_task');
             }}
-            onOpenProfile={() => setIsProfileOpen(true)}
+            onOpenProfile={() => setViewMode('user_profile')}
             isDbConnected={isDbConnected}
             isUsingFallback={isUsingFallback}
             onShowSqlModal={() => setShowSqlModal(true)}
           />
 
           <main className="flex-grow">
-            {isCreatingTask ? (
+            {viewMode === 'user_profile' ? (
+              <UserProfilePage
+                user={user}
+                onBack={() => setViewMode('dashboard')}
+                onBalanceUpdate={handleBalanceUpdate}
+              />
+            ) : viewMode === 'task_execution' && executingTask ? (
+              <TaskExecutionPage
+                task={executingTask}
+                user={user}
+                onBack={() => {
+                  setViewMode('dashboard');
+                  setExecutingTask(null);
+                }}
+                onSuccess={() => {
+                  setViewMode('dashboard');
+                  setExecutingTask(null);
+                }}
+              />
+            ) : viewMode === 'create_task' ? (
               <CreateTask
                 user={user}
                 onSuccess={(updatedUser) => {
                   handleBalanceUpdate(updatedUser);
-                  setIsCreatingTask(false);
+                  setViewMode('dashboard');
                 }}
-                onCancel={() => setIsCreatingTask(false)}
+                onCancel={() => setViewMode('dashboard')}
               />
             ) : activeRole === 'admin' ? (
               <AdminPanel
@@ -141,13 +163,17 @@ export default function App() {
             ) : activeRole === 'advertiser' ? (
               <AdvertiserDashboard
                 user={user}
-                onOpenCreateTask={() => setIsCreatingTask(true)}
+                onOpenCreateTask={() => setViewMode('create_task')}
                 onBalanceUpdate={handleBalanceUpdate}
               />
             ) : (
               <WorkerDashboard
                 user={user}
                 onBalanceUpdate={handleBalanceUpdate}
+                onSelectTask={(task) => {
+                  setExecutingTask(task);
+                  setViewMode('task_execution');
+                }}
               />
             )}
           </main>
@@ -167,15 +193,6 @@ export default function App() {
         isOpen={showSqlModal}
         onClose={() => setShowSqlModal(false)}
       />
-
-      {/* User Profile Modal */}
-      {user && (
-        <UserProfileModal
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-          user={user}
-        />
-      )}
 
       {/* Footer copyright */}
       <footer className="bg-white border-t border-neutral-100 py-6 mt-12 text-center text-xs text-neutral-400 font-medium">
