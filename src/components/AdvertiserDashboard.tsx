@@ -593,6 +593,87 @@ export const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({
                       </button>
                     </div>
                   )}
+                  {/* Actions for rejected submissions: Report/Dispute */}
+                  {sub.status === 'rejected' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement dispute handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Report this worker for malicious activity"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" />
+                        <span>Report / Dispute</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Actions for approved submissions: Rate Worker */}
+                  {sub.status === 'approved' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement rating handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Rate this worker"
+                      >
+                        <Star className="h-3.5 w-3.5" />
+                        <span>Rate Worker</span>
+                      </button>
+                    </div>
+                  )}
+                  {/* Actions for rejected submissions: Report/Dispute */}
+                  {sub.status === 'rejected' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement dispute handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Report this worker for malicious activity"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" />
+                        <span>Report / Dispute</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Actions for approved submissions: Rate Worker */}
+                  {sub.status === 'approved' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement rating handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Rate this worker"
+                      >
+                        <Star className="h-3.5 w-3.5" />
+                        <span>Rate Worker</span>
+                      </button>
+                    </div>
+                  )}
+                  {/* Actions for rejected submissions: Report/Dispute */}
+                  {sub.status === 'rejected' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement dispute handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Report this worker for malicious activity"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" />
+                        <span>Report / Dispute</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Actions for approved submissions: Rate Worker */}
+                  {sub.status === 'approved' && (
+                    <div className="flex sm:flex-col gap-2 shrink-0 sm:w-36">
+                      <button
+                        onClick={() => { /* Implement rating handling for advertiser */ }}
+                        className="flex-1 py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                        title="Rate this worker"
+                      >
+                        <Star className="h-3.5 w-3.5" />
+                        <span>Rate Worker</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

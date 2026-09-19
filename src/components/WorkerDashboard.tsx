@@ -534,10 +534,20 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({ user, onBalanc
                           )}
 
                           {sub.status === 'rejected' && (
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                              <XCircle className="h-3.5 w-3.5 mr-1.5 text-rose-600" />
-                              Declined / Rejected
-                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                <XCircle className="h-3.5 w-3.5 mr-1.5 text-rose-600" />
+                                Declined / Rejected
+                              </span>
+                              <button
+                                onClick={() => { /* Implement dispute handling for worker */ }}
+                                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                                title="Appeal this rejection"
+                              >
+                                <ShieldAlert className="h-3.5 w-3.5" />
+                                <span>Appeal / Dispute</span>
+                              </button>
+                            </div>
                           )}
 
                           {sub.status === 'revision_requested' && (
